@@ -1,11 +1,20 @@
-Family killer sudoko competition
+Family killer sudoku competition
 ================================
 
-After the success of last year's family chess completion Micheal Howlett has 
-challenged the family to solve killer sudoku problems quickly.
+After the success of last year's family chess completion 
+Micheal Howlett has challenged the family to solve killer sudoku 
+problems quickly.
 
 We will all try to solve a set of killer sudoko problems. 
-The winner will be the person who solves a test selection of problems fastest.
-If we can't solve the all the test problems then the winner is the person who solves the most.
+The winner will be the person who solves a test selection of problems 
+fastest. If we can't solve the all the test problems then the winner 
+is the person who solves the greatest number of them.
 
-To put everyone on an equal footing all timed solutions
+Rules
+=====
+- Don't look at the existing literature or code for solving sudoku/killer sudoku problems. We believe it is more interesting to figure out everything from scratch.
+- Don't spy on other people's techniques.
+- Don't copy other people's code.
+- All solutions must be written in python.
+- You must write a general solver capable of solving all killer sudoku problems. 
+- Specialising your solver for the problems provided is not allowed.
