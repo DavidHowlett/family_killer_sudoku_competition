@@ -73,7 +73,7 @@ def main(target):
     print(rules)
 
     # Generate initial set of cells
-    cells = [[i+1 for i in range(9)] for _ in range(2 ** 9)]
+    cells = [{i+1 for i in range(9)} for _ in range(9 ** 2)]
 
     result = core(cells, rules)
     print(result)
@@ -90,7 +90,7 @@ def core(cells, rules):
         for possibles, targets in rules:
             # A value is not available in some cells, so some rule solutions are no longer valid
             # Use a dumb test for now
-            target_possibles = {cell_poss for target in targets for cell_poss in cells[target]}
+            target_possibles = set().union(*[cells[target] for target in targets])
             for poss_index, possible in reversed(list(enumerate(possibles))):
                 # Reverse to avoid issue where deleting elements from the list makes it shorter
                 if possible - target_possibles:
@@ -104,11 +104,16 @@ def core(cells, rules):
                 raise RuleViolationError
 
             # A value is not in possible solutions, so value can be removed from all cells
+            rule_possibles = set().union(*possibles)
+            for target in targets:
+                removables = cells[target] - rule_possibles
+                if removables:
+                    deduction_made = True
+                    cells[target] -= removables
 
-            pass
 
             # A rule's subjects have been completely defined, so no need to keep the rule around.
-        pass
+
 
     # Do some branching phase
     best_cell = None
@@ -124,7 +129,7 @@ def core(cells, rules):
         return cells
     else:
         for possible in list(cells[best_cell]):
-            cells[best_cell] = [possible]
+            cells[best_cell] = {possible,}
             try:
                 return core(cells, rules)
             except RuleViolationError:
