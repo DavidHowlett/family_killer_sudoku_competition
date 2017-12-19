@@ -23,6 +23,9 @@ import time
 # Therefore choose a cell, and examine every possibility.
 #
 
+class RuleViolationError(RuntimeError):
+    pass
+
 
 def load_problem(target):
     """Load the problem from the file"""
@@ -62,15 +65,41 @@ def main(target):
 
     # Load problem
     rules = load_problem(target)
-    print(rules)
 
+    # Generate initial set of cells
+    cells = [[i+1 for i in range(9)] for _ in range(2 ** 9)]
+
+    result = core(cells, rules)
+    print(result)
 
 
 def core(cells, rules):
     """Solve the problem given"""
     # Do some deductive phase here
 
+
     # Do some branching phase
+    best_cell = None
+    best_qual = 9999
+
+    for cell, possibles in enumerate(cells):
+        if 1 < len(possibles) < best_qual:
+            best_cell = cell
+            best_qual = len(possibles)
+
+    if best_cell is None:
+        # Could not branch at all, so must have found optimal solution
+        return cells
+    else:
+        for possible in list(cells[best_cell]):
+            cells[best_cell] = [possible]
+            try:
+                return core(cells, rules)
+            except RuleViolationError:
+                pass
+        else:
+            # Euhh, no possible value of best_cell is valid, must violate a rule
+            raise RuleViolationError
 
 
 if __name__ == '__main__':
