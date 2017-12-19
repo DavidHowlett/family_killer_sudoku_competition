@@ -41,7 +41,7 @@ problem1 = [
     [15, [[8, 5], [8, 6]]],
 ]
 
-problem2 = [  # unfinished
+problem2 = [  # from https://krazydad.com/killersudoku/sfiles/KD_Killer_IN12_8_v50.pdf
     [13, [[0, 0], [0, 1]]],
     [5,  [[1, 0], [1, 1]]],
     [24, [[2, 0], [3, 0], [4, 0], [5, 0]]],
@@ -97,4 +97,3 @@ for problem in problems:
 # Michael wanted the problems flipped to be the same as in his code
 michael_style_problems = [(b, a) for a, b in problem1]
 # print(michael_style_problems)
-
