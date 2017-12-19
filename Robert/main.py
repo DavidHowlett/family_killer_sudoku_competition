@@ -1,3 +1,4 @@
+import copy
 import time
 # Middle of problem state:
 # List of cells
@@ -66,6 +67,11 @@ def main(target):
     # Load problem
     rules = load_problem(target)
 
+    # Replace target values with combinations
+    rules = [([combo for combo in combinations[val] if len(combo) == len(subjects)], subjects)
+             for val, subjects in rules]
+    print(rules)
+
     # Generate initial set of cells
     cells = [[i+1 for i in range(9)] for _ in range(2 ** 9)]
 
@@ -76,7 +82,33 @@ def main(target):
 def core(cells, rules):
     """Solve the problem given"""
     # Do some deductive phase here
+    cells = copy.deepcopy(cells)
+    rules = copy.deepcopy(rules)
+    deduction_made = True  # Controls whether we go around the loop again
+    while deduction_made:
+        deduction_made = False
+        for possibles, targets in rules:
+            # A value is not available in some cells, so some rule solutions are no longer valid
+            # Use a dumb test for now
+            target_possibles = {cell_poss for target in targets for cell_poss in cells[target]}
+            for poss_index, possible in reversed(list(enumerate(possibles))):
+                # Reverse to avoid issue where deleting elements from the list makes it shorter
+                if possible - target_possibles:
+                    # Some number is in "possible" which isn't in any cell
+                    del possibles[poss_index]
 
+            # Some values in cells have been fixed, so we can simplify the rule, make it apply to fewer cells
+
+            # A rule might not possible to achieve with the given cells, so raise an error
+            if len(possibles) == 0:
+                raise RuleViolationError
+
+            # A value is not in possible solutions, so value can be removed from all cells
+
+            pass
+
+            # A rule's subjects have been completely defined, so no need to keep the rule around.
+        pass
 
     # Do some branching phase
     best_cell = None
