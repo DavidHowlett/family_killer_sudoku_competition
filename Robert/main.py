@@ -1,3 +1,5 @@
+import os
+
 # Load problem
 
 # Precalculate sums for 1-45 for 1-9 numbers
@@ -30,14 +32,24 @@
 
 
 def main(target):
-    pass
+    """Solve the problem given in target"""
+
+    # Create a dictionary of all possible combinations
+    combinations = {n: [] for n in range(46)}
+    for i in range(2 ** 9):
+        filt = "{0:0>9b}".format(i)
+        nums = {val + 1 for val, flag in enumerate(filt) if int(flag)}
+
+        combinations[sum(nums)] += [nums]
 
 
-def precalc():
-    pass
 
+def core(cells, rules):
+    """Solve the problem given"""
+    # Do some deductive phase here
 
-precalc()
+    # Do some branching phase
+
 
 if __name__ == '__main__':
     main("test.txt")
