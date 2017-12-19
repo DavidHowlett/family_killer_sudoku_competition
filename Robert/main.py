@@ -1,11 +1,4 @@
-import os
-
-# Load problem
-
-# Precalculate sums for 1-45 for 1-9 numbers
-
-# Consider converting to 0-8 instead of 1-9
-
+import time
 # Middle of problem state:
 # List of cells
 #   containing set of possible values
@@ -31,16 +24,45 @@ import os
 #
 
 
+def load_problem(target):
+    """Load the problem from the file"""
+    from problems import problem1 as raw
+
+    problem = raw
+
+    # Add basic sudoku rules (implied)
+    # This can be moved to import time
+    # Rows contain unique 1-9
+    problem += [(45, [(row, col) for col in range(9)]) for row in range(9)]
+    # Cols contain unique 1-9
+    problem += [(45, [(row, col) for row in range(9)]) for col in range(9)]
+    # big squares contain unique 1-9
+    for big_row in range(3):
+        for big_col in range(3):
+            problem += [(45, [(row+3*big_row, col+3*big_col) for row in range(3) for col in range(3)])]
+
+    # Convert from dual index to single index
+    for index, rule in enumerate(problem):
+        problem[index] = (rule[0], [row*9+col for row, col in rule[1]])
+
+    return problem
+
+
 def main(target):
     """Solve the problem given in target"""
 
     # Create a dictionary of all possible combinations
+    # This can be moved to import time
     combinations = {n: [] for n in range(46)}
     for i in range(2 ** 9):
         filt = "{0:0>9b}".format(i)
         nums = {val + 1 for val, flag in enumerate(filt) if int(flag)}
 
         combinations[sum(nums)] += [nums]
+
+    # Load problem
+    rules = load_problem(target)
+    print(rules)
 
 
 
@@ -52,4 +74,6 @@ def core(cells, rules):
 
 
 if __name__ == '__main__':
+    ct = time.time()
     main("test.txt")
+    print(time.time()-ct)
