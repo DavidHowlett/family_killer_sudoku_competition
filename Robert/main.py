@@ -23,6 +23,9 @@ import time
 # Deductive is fast, but probably won't be good enough to solve alone.
 # Therefore choose a cell, and examine every possibility.
 #
+ITERCOUNT = 0
+
+
 
 class RuleViolationError(RuntimeError):
     pass
@@ -68,7 +71,7 @@ def main(target):
     rules = load_problem(target)
 
     # Replace target values with combinations
-    rules = [([combo for combo in combinations[val] if len(combo) == len(subjects)], subjects)
+    rules = [([combo.copy() for combo in combinations[val] if len(combo) == len(subjects)], subjects)
              for val, subjects in rules]
     print(rules)
 
@@ -84,10 +87,22 @@ def core(cells, rules):
     # Do some deductive phase here
     cells = copy.deepcopy(cells)
     rules = copy.deepcopy(rules)
+
     deduction_made = True  # Controls whether we go around the loop again
     while deduction_made:
         deduction_made = False
         for possibles, targets in rules:
+            if not len(targets):
+                # rule satisfied, skip
+                continue
+            # Some values in cells have been fixed, so we can simplify the rule, make it apply to fewer cells
+            for target in list(targets):
+                if len(cells[target]) == 1:
+                    fixed_value = next(iter(cells[target]))  # Grab the value of the cell
+                    for possible in possibles:
+                        possible -= {fixed_value}
+                    targets.remove(target)
+
             # A value is not available in some cells, so some rule solutions are no longer valid
             # Use a dumb test for now
             target_possibles = set().union(*[cells[target] for target in targets])
@@ -97,10 +112,9 @@ def core(cells, rules):
                     # Some number is in "possible" which isn't in any cell
                     del possibles[poss_index]
 
-            # Some values in cells have been fixed, so we can simplify the rule, make it apply to fewer cells
-
             # A rule might not possible to achieve with the given cells, so raise an error
-            if len(possibles) == 0:
+            if all([len(possible) != len(targets) for possible in possibles]):
+                # This can occur if two cells in the same rule have been fixed to the same value.
                 raise RuleViolationError
 
             # A value is not in possible solutions, so value can be removed from all cells
@@ -111,10 +125,6 @@ def core(cells, rules):
                     deduction_made = True
                     cells[target] -= removables
 
-
-            # A rule's subjects have been completely defined, so no need to keep the rule around.
-
-
     # Do some branching phase
     best_cell = None
     best_qual = 9999
@@ -124,12 +134,15 @@ def core(cells, rules):
             best_cell = cell
             best_qual = len(possibles)
 
+    check = sum([len(cell) for cell in cells])
+    print(check)
+
     if best_cell is None:
         # Could not branch at all, so must have found optimal solution
         return cells
     else:
         for possible in list(cells[best_cell]):
-            cells[best_cell] = {possible,}
+            cells[best_cell] = {possible, }
             try:
                 return core(cells, rules)
             except RuleViolationError:
