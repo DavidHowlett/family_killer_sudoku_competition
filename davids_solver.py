@@ -1,5 +1,6 @@
 from time import perf_counter as now
 import copy
+import itertools
 import random
 import problems
 
@@ -23,45 +24,10 @@ group_memberships = [[group for group in groups if loc in group] for loc in rang
 # friends of a location are the locations that share a row, column or box
 friends = [set().union(*[group for group in group_memberships[loc]]).difference({loc})
            for loc in range(81)]
-
-'''
-total   squares lists
-3       2       [[1,2]]
-4       2       [[1,3]]
-5       2       [[1,4], [2,3]]
-6       2       [[1,5], [2,4]]
-7       2       [[1,5], [2,5], [3,4]]
-8       2       [[1,6], [2,6], [3,5]]
-
-6       3       [[1,2,3]]
-7       3       [[1,2,4]]
-8       3       [[1,2,5], [1,3,4]]
-9       3       [[1,2,6], [1,3,5], [2,3,4]]
-
-'''
-'''
-possible_sections = [
-    None,
-    None,
-    {
-        3: [{1, 2}],
-        4: [{1, 3}],
-        5: [{1, 4}, {2, 3}],
-        6: [{1, 5}, {2, 4}],
-        7: [{1, 6}, {2, 5}, {3, 5}],
-    }
-]
-
-possible_sections = [
-    {(section_length+section_length**2)//2: [set(range(1, section_length+1))]} for section_length in range(4)]
-for worm_length in range(2, 4):
-    for worm in possible_sections[worm_length]:
-        print(worm)
-
-    print(current_worms)
-
-print(possible_worms)
-'''
+# combos contains every possible collection of the digits 1-9
+combos = [{i+1 for i in range(9) if j & 1 << i} for j in range(512)]
+# sections groups them by length and total
+sections = [[[c for c in combos if len(c) == length and sum(c) == total] for total in range(46)] for length in range(9)]
 
 
 def print_board(board):
