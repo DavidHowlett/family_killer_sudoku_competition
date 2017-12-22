@@ -1,8 +1,19 @@
-from time import perf_counter as now
+"""
+possible constraints to implement:
+✓ if {5} becomes the value of a square remove 5 from all friends
+x initialise squares within a section 3 long with a total of 10 to only allow numbers found in combos[3][10]
+x on each change in a section
+    x work out which of combos[3][10] is still possible and only allow square possibilities in that
+
+x if 5 is only allowed in one square in a group (of size 9) set that square to 5
+
+todo list:
+- define all variables that are constant for a problem as globals in a setup() function which takes simple args
+- add doc tests until I find the problem with the code
+"""
+
+
 import copy
-import itertools
-import random
-import problems
 
 
 class Contradiction(Exception):
@@ -13,49 +24,42 @@ rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
-section_totals = [(total, {x+(8-y)*9 for x, y in section}) for total, section in problems.problem2]
-section_totals = [section_totals[-2]]
-sections = [section for total, section in section_totals]
-# print(boxes)
-# print(sections)
-groups = rows+cols+boxes+sections
-# I need to know which groups each square is a member of
-group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
-# friends of a location are the locations that share a row, column or box
-friends = [set().union(*[group for group in group_memberships[loc]]).difference({loc})
-           for loc in range(81)]
+static_groups = rows + cols + boxes
 # combos contains every possible collection of the digits 1-9
-combos = [{i+1 for i in range(9) if j & 1 << i} for j in range(512)]
-# sections groups them by length and total
-sections = [[[c for c in combos if len(c) == length and sum(c) == total] for total in range(46)] for length in range(9)]
+combos = [frozenset(i + 1 for i in range(9) if j & 1 << i) for j in range(512)]
+# then group them by length and total
+combos = [[
+    frozenset(c for c in combos if len(c) == length and sum(c) == total) for total in range(46)] for length in range(9)]
 
 
 def print_board(board):
+    to_print = ''
     for row in range(9):
         for col in range(9):
             square = board[col + row * 9]
             if len(square) == 0:
-                print('!', end=' ')
+                to_print += '! '
             elif len(square) == 1:
-                print(*square, end=' ')
+                to_print += str(square)[1] + ' '
             else:
-                print('.', end=' ')
-        print('')
-    print('')
+                to_print += '. '
+        to_print += '\n'
+    to_print += '\n'
+    print(to_print)
 
 
-def slow_consistency_check(board):
+def slow_consistency_check(board, sections):
     """This does a bunch of sanity checks"""
     for group in groups:
         if len(set().union(*[board[loc] for loc in group])) < len(group):
             raise Contradiction
-    for total, section in section_totals:
-        if all(len(board[loc]) == 1 for loc in section) and \
-                sum(board[loc].__iter__().__next__() for loc in section) != total:
+    for section in sections:
+        if all(len(board[loc]) == 1 for loc in section['locs']) and \
+                sum(board[loc].__iter__().__next__() for loc in section['locs']) != section['total']:
             raise Contradiction
 
 
-def add_value(board, loc, val):
+def add_value(board, sections, loc, val):
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function does not change the board given.
     It will either return a board or raise a Contradiction."""
@@ -74,13 +78,13 @@ def add_value(board, loc, val):
             # if the other square becomes solved as a result of the removal then
             # extra processing is required
             if len(friend2) == 1:
-                add_value(board, loc2, *friend2)
+                add_value(board, sections, loc2, *friend2)
             # todo here you should check if this leaves a group where a number can only be in one location
-    slow_consistency_check(board)
+    slow_consistency_check(board, sections)
     return board
 
 
-def solver(board):
+def solver(board, sections):
     """This solves an arbitrary board by guessing solutions"""
     print_board(board)
     loc_to_guess = None
@@ -97,49 +101,48 @@ def solver(board):
     if loc_to_guess is None:
         # then the board is solved :-)
         return board
-    progress_possible = False
-    # for possibility in random.sample(board[loc_to_guess], k=len(board[loc_to_guess])):
     for possibility in board[loc_to_guess]:
         try:
-            return solver(add_value(board, loc_to_guess, possibility))
+            return solver(add_value(board, sections, loc_to_guess, possibility), sections)
         except Contradiction:
             # then that particular guess is wrong
             pass
-    if not progress_possible:
-        # if there is a square on the current board which has no possible values
-        # then there is a contradiction somewhere
-        print('Backtrack')
-        raise Contradiction
+    # if there is a square on the current board which has no possible values
+    # then there is a contradiction somewhere
+    # print('Backtrack')
+    raise Contradiction
 
 
-def main(problem):
-    return solver([list(range(1, 10)) for _ in range(81)])
+def main(sections):
+    # todo use less globals
+    global friends
+    global groups
+    global group_memberships
 
+    sections = [{
+            'total': total,
+            'locs': {x + y * 9 for x, y in section},
+            'combos': combos[len(section)][total]}
+        for total, section in sections]
+    # sections = sections[-1:]
+    groups = rows + cols + boxes + [section['locs'] for section in sections]
+    # I need to know which groups each square is a member of
+    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
+    # friends of a location are the locations that share a row, column or box
+    friends = [set.union(*group_memberships[loc]).difference({loc})for loc in range(81)]
 
-if __name__ == '__main__':
-    # board is the current state of the solution
-    global_board = [list(range(1, 10)) for _ in range(81)]
-    # this bit generates a legal sudoku board
-    for col in range(6):
-        for row in range(7):
-            add_value(global_board, col + row * 9, 1+(col + row * 12 - row//3) % 9)
+    # initialise the board based on the known possible combos
+    board = [list(range(1, 10)) for _ in range(81)]
+    for section in sections:
+        possible_values = set(frozenset.union(*section['combos']))
+        for loc in section['locs']:
+            board[loc] = copy.copy(possible_values)
+            # if loc == 1:
+            #    print('combos', section['combos'])
+            #    print(possible_values)
+            #    print('section', section)
 
-    '''
-    # this almost always generates bad boards
-    for loc in range(81):
-        try:
-            global_board = add_value(global_board, loc, random.randint(1, 9))
-        except Contradiction:
-            pass
-    '''
-    # add_value(global_board, 80, 1)
-    # add_value(global_board, 7, 3)
-    # print_board(global_board)
-    '''
-    start_time = now()
-    print_board(main(global_board))
-    print('Section totals:', section_totals)
-    print(f'the run took: {now()-start_time} seconds')
-    '''
-
-
+    # print_board(board)
+    # print(board[1])
+    slow_consistency_check(board, sections)  # todo remove
+    return solver(board, sections)
