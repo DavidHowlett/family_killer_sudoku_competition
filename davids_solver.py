@@ -12,8 +12,9 @@ possible constraints to implement:
 x initialise squares within a section 3 long with a total of 10 to only allow numbers found in combos[3][10]
 x on each change in a section
     x work out which of combos[3][10] is still possible and only allow square possibilities in that
-
 x if 5 is only allowed in one square in a group (of size 9) set that square to 5
+
+
 
 solve time history:
 initial solver time
@@ -24,6 +25,7 @@ switched to bitwise sets
 0.131 problem1
 
 """
+import doctest
 
 
 class Contradiction(Exception):
@@ -130,17 +132,17 @@ def print_board(board):
     >>> board = init_board(sections)
     >>> board = add_value(board, sections, 0, 256)
     >>> print_board(board)
-    9 7 . . . . . . .  |  256  64   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-    . . . . . . . . .  |    .   .   .   .   .   .   .   .   .
-
-
+    9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
+    . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
+    . . . . . . . . .  |  190 184 184 511 480  15  15 504   5
+    . . . . . . . . .  |  254  27  27 511 511 510 495 504   5
+    . . . . . . . . .  |  255 191 320 119 511 510 495  63  63
+    . . . . . . . . .  |   63  55 320 119 511 511 255 255 480
+    . . . . . . . . .  |   63  55   5   5 119 511 432 432 480
+    . . . . . . . . .  |  255 447 432 432 119 511 511  63  63
+    . . . . . . . . .  |  255 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
     """
     to_print = ''
     for row in range(9):
@@ -155,25 +157,24 @@ def print_board(board):
         to_print += ' | '
         for col in range(9):
             square = board[col + row * 9]
-            if square == 0:
-                to_print += '   !'
-            elif square in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                to_print += f' {square:>3}'
-            else:
-                to_print += '   .'
+            to_print += f' {square:>3}'
         to_print += '\n'
     to_print += '\n'
     print(to_print)
 
 
 def slow_consistency_check(board, sections):
-    """This does a bunch of sanity checks"""
+    """This does a bunch of sanity checks, this should not be left in the final solver"""
+    for square in board:
+        assert square
     for group in groups:
         assert section_sum(union(board[loc] for loc in group)) >= len(group)
     for section in sections:
+        # if all the squares in a section are solved check that the section has the right total
         if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):
-            if sum(section_sum(board[loc]) for loc in section['locs']) != section['total']:
+            if not(section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
                 raise Contradiction
+            assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
 
 
 def add_value(board, sections, loc, single_possibility):
@@ -205,7 +206,7 @@ def add_value(board, sections, loc, single_possibility):
                 raise Contradiction
             if board[loc2] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
                 board = add_value(board, sections, loc2, board[loc2])
-            # todo here you should check if this leaves a group where a number can only be in one location
+            # todo here you should check if this leaves a group of 9 where a number can only be in one location
     slow_consistency_check(board, sections)
     return board
 
@@ -238,7 +239,7 @@ def solver(board, sections):
             pass
     # if there is a square on the current board which has no possible values
     # then there is a contradiction somewhere
-    # print('Backtrack')
+    print('Backtrack')
     raise Contradiction
 
 
@@ -280,3 +281,4 @@ combos = [[
 assert combos[2][3] == frozenset({3})
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
 assert combos[2][5] == frozenset({6, 9})
+doctest.testmod()
