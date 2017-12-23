@@ -8,8 +8,9 @@ x on each change in a section
 x if 5 is only allowed in one square in a group (of size 9) set that square to 5
 
 todo list:
-- define all variables that are constant for a problem as globals in a setup() function which takes simple args
-- add doc tests until I find the problem with the code
+- figure out why the solver still recurses when problem is nearly solved (that should be handled with add_value)
+- add doc
+
 """
 
 
@@ -30,6 +31,33 @@ combos = [frozenset(i + 1 for i in range(9) if j & 1 << i) for j in range(512)]
 # then group them by length and total
 combos = [[
     frozenset(c for c in combos if len(c) == length and sum(c) == total) for total in range(46)] for length in range(9)]
+
+
+def setup(problem):
+    global friends
+    global groups
+    global group_memberships
+    sections = [{
+            'total': total,
+            'locs': {x + y * 9 for x, y in section},
+            'combos': combos[len(section)][total]}
+        for total, section in problem]
+    groups = rows + cols + boxes + [section['locs'] for section in sections]
+    # I need to know which groups each square is a member of
+    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
+    # friends of a location are the locations that share a row, column or box
+    friends = [set.union(*group_memberships[loc]).difference({loc})for loc in range(81)]
+    return sections
+
+
+def init_board(sections):
+    # initialise the board based on the known possible combos
+    board = [list(range(1, 10)) for _ in range(81)]
+    for section in sections:
+        possible_values = set(frozenset.union(*section['combos']))
+        for loc in section['locs']:
+            board[loc] = copy.copy(possible_values)
+    return board
 
 
 def print_board(board):
@@ -67,7 +95,7 @@ def add_value(board, sections, loc, val):
     assert 0 < val < 10
     board = copy.deepcopy(board)
     # set the current square
-    board[loc] = [val]
+    board[loc] = {val}
     # we now know that the value in the current square can't be found in any of the neighbors
     for loc2 in friends[loc]:
         friend2 = board[loc2]
@@ -78,7 +106,7 @@ def add_value(board, sections, loc, val):
             # if the other square becomes solved as a result of the removal then
             # extra processing is required
             if len(friend2) == 1:
-                add_value(board, sections, loc2, *friend2)
+                board = add_value(board, sections, loc2, *friend2)
             # todo here you should check if this leaves a group where a number can only be in one location
     slow_consistency_check(board, sections)
     return board
@@ -103,7 +131,10 @@ def solver(board, sections):
         return board
     for possibility in board[loc_to_guess]:
         try:
-            return solver(add_value(board, sections, loc_to_guess, possibility), sections)
+            if sum(len(square) for square in board) < 86:
+                print('close now')
+            possible_board = add_value(board, sections, loc_to_guess, possibility)
+            return solver(possible_board, sections)
         except Contradiction:
             # then that particular guess is wrong
             pass
@@ -113,36 +144,19 @@ def solver(board, sections):
     raise Contradiction
 
 
-def main(sections):
-    # todo use less globals
-    global friends
-    global groups
-    global group_memberships
-
-    sections = [{
-            'total': total,
-            'locs': {x + y * 9 for x, y in section},
-            'combos': combos[len(section)][total]}
-        for total, section in sections]
-    # sections = sections[-1:]
-    groups = rows + cols + boxes + [section['locs'] for section in sections]
-    # I need to know which groups each square is a member of
-    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
-    # friends of a location are the locations that share a row, column or box
-    friends = [set.union(*group_memberships[loc]).difference({loc})for loc in range(81)]
-
-    # initialise the board based on the known possible combos
-    board = [list(range(1, 10)) for _ in range(81)]
-    for section in sections:
-        possible_values = set(frozenset.union(*section['combos']))
-        for loc in section['locs']:
-            board[loc] = copy.copy(possible_values)
-            # if loc == 1:
-            #    print('combos', section['combos'])
-            #    print(possible_values)
-            #    print('section', section)
-
-    # print_board(board)
-    # print(board[1])
+def main(problem):
+    # problem = problem[-1:]
+    sections = setup(problem)
+    board = init_board(sections)
     slow_consistency_check(board, sections)  # todo remove
     return solver(board, sections)
+
+
+'''
+solve time history:
+initial solver time
+1.856   problem1
+fixed a bug
+1.027   problem1
+
+'''
