@@ -1,6 +1,17 @@
-"""This file contains example killer sudoku problems that have been checked. The first one was typed by Michael,
-the second by David."""
-
+"""This file contains example killer sudoku problems that have been checked.
+The first problem was typed by Michael. The solution is:
+    9 7 1 3 4 6 5 8 2
+    2 3 4 5 8 1 7 6 9
+    6 8 5 9 7 2 3 4 1
+    5 4 2 7 1 8 6 9 3
+    8 1 7 6 9 3 4 2 5
+    3 6 9 2 5 4 8 1 7
+    4 2 3 1 6 7 9 5 8
+    7 5 6 8 2 9 1 3 4
+    1 9 8 4 3 5 2 7 6
+The second problem was typed by David. The solution is:
+    ???
+"""
 problem1 = [
     [16, [[0, 0], [1, 0]]],
     [5,  [[0, 1], [1, 1]]],
