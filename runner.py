@@ -11,6 +11,6 @@ if __name__ == '__main__':
         print(f'{run_time:.4f} seconds to run', problem_name)
         print(david_solver.add_value_calls, 'add_value_calls')
         print(david_solver.bad_guesses, 'bad_guesses')
-    # ct = now()
+    ct = now()
     # robert_solver.main("problem 2")
-    # print(now()-ct)
+    print(now()-ct)

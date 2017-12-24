@@ -84,7 +84,13 @@ made ex union code execute less often
 53716 add_value_calls
 11169 bad_guesses
 
-
+changed search order
+0.0058 seconds to run problem 1
+106 add_value_calls
+2 bad_guesses
+0.4858 seconds to run problem 2
+11168 add_value_calls
+2536 bad_guesses
 """
 import doctest
 
@@ -308,22 +314,43 @@ def remove_possibilities(board, sections, loc, possibilities, recurse, ):
         section['combos'] = new_combos
         for loc2 in section['locs']:
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
-
+    
     if not recurse:
-        # check if this leaves a group of 9 where a number can only be in one location
-        for group in static_groups[loc]:
-            for loc2 in group:
-                # don't bother looking at squares that already known
-                if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                    found_digits = 0
-                    for loc3 in group:
-                        if loc3 != loc2:
-                            found_digits = found_digits | board[loc3]
-                    digits_unaccounted_for = 511 ^ found_digits
-                    if digits_unaccounted_for:
-                        # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                        #    raise Contradiction
-                        add_value(board, sections, loc2, digits_unaccounted_for)
+        extra_checks(board, sections, loc)
+
+
+def extra_checks(board, sections, loc):
+    # check if this leaves a group of 9 where a number can only be in one location
+    for group in static_groups[loc]:
+        for loc2 in group:
+            # don't bother looking at squares that already known
+            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                found_digits = 0
+                for loc3 in group:
+                    if loc3 != loc2:
+                        found_digits = found_digits | board[loc3]
+                digits_unaccounted_for = 511 ^ found_digits
+                if digits_unaccounted_for:
+                    # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    #    raise Contradiction
+                    add_value(board, sections, loc2, digits_unaccounted_for)
+
+
+def extra_checks2(board, sections):
+    # check if this leaves a group of 9 where a number can only be in one location
+    for group in rows + cols + boxes:
+        for loc2 in group:
+            # don't bother looking at squares that already known
+            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                found_digits = 0
+                for loc3 in group:
+                    if loc3 != loc2:
+                        found_digits = found_digits | board[loc3]
+                digits_unaccounted_for = 511 ^ found_digits
+                if digits_unaccounted_for:
+                    # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    #    raise Contradiction
+                    add_value(board, sections, loc2, digits_unaccounted_for)
 
 
 def solver(board, sections):
@@ -334,6 +361,7 @@ def solver(board, sections):
     min_possibility_count = 999
     # find the uncertain square with the least possible values
     for loc in range(81):
+        loc = loc * 10 % 81  # this line spreads out the guesses
         possibility_count = pop_count(board[loc])
         if 1 < possibility_count < min_possibility_count:
             min_possibility_count = possibility_count
@@ -351,7 +379,8 @@ def solver(board, sections):
             possible_board = board[:]
             possible_sections = [s.copy() for s in sections]
             add_value(possible_board, possible_sections, loc_to_guess, possibility)
-            return solver(possible_board, possible_sections)
+            solver(possible_board, possible_sections)
+            return possible_board
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
