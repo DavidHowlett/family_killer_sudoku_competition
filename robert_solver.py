@@ -152,7 +152,7 @@ def core(cells, rules):
                             p.remove(e)
 
                     deduction_made = True
-
+        rules = list(filter(lambda x: x[1], rules))  # Filter out empty rules
 
     check = sum([len(cell) for cell in cells])
     print(ITERCOUNT, check)
