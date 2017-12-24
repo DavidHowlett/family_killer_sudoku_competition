@@ -20,3 +20,9 @@ if __name__ == '__main__':
 
     print('it all works!')
 
+'''
+    new_section = sections[loc][:]
+    new_section['combos'] = [combo for combo in new_section['combos'] if single_possibility & combo]
+    for loc in new_section['locs']:
+        sections[loc] = new_section
+    '''

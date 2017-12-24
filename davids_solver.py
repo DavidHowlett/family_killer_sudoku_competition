@@ -23,6 +23,8 @@ fixed a bug
 1.027   problem1
 switched to bitwise sets
 0.131 problem1
+removed slow_consistency_checker from critical path
+0.0137 problem1
 
 """
 import doctest
@@ -85,18 +87,22 @@ def setup(problem):
     """This defines all the globals needed and returns a formatted list of sections
     >>> import problems
     >>> sections = setup(problems.problem1)
-    >>> sections[1]
-    {'total': 5, 'locs': {9, 10}, 'combos': frozenset({9, 6})}
+    >>> sections[4]
+    {'total': 10, 'locs': {4, 5}, 'combos': frozenset({40, 257, 130, 68})}
     """
     global friends
     global groups
     global group_memberships
-    sections = [{
+    initial_sections = [{
             'total': total,
             'locs': {x + y * 9 for x, y in section},
             'combos': combos[len(section)][total]}
         for total, section in problem]
-    groups = rows + cols + boxes + [section['locs'] for section in sections]
+    sections = [None for _ in range(81)]
+    for section in initial_sections:
+        for loc in section['locs']:
+            sections[loc] = section
+    groups = rows + cols + boxes + [section['locs'] for section in initial_sections]
     # I need to know which groups each square is a member of
     group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
     for loc in range(81):
@@ -172,8 +178,6 @@ def slow_consistency_check(board, sections):
     for section in sections:
         # if all the squares in a section are solved check that the section has the right total
         if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):
-            if not(section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
-                raise Contradiction
             assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
 
 
@@ -197,6 +201,14 @@ def add_value(board, sections, loc, single_possibility):
     board = board[:]
     # set the current square
     board[loc] = single_possibility
+
+    section = sections[loc]
+    # if all the squares in a section are solved check that the section has the right total
+    if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
+        if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
+            raise Contradiction
+        assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
+
     # we now know that the value in the current square can't be found in any of the neighbors
     for loc2 in friends[loc]:
         # only do the work to remove a value if the value is considered possible
