@@ -22,7 +22,6 @@ import time
 # Deductive is fast, but probably won't be good enough to solve alone.
 # Therefore choose a cell, and examine every possibility.
 #
-ITERCOUNT = 0
 
 
 class RuleViolationError(RuntimeError):
@@ -79,7 +78,6 @@ def main(target):
     # Replace target values with combinations
     rules = [([combo.copy() for combo in combinations[val] if len(combo) == len(subjects)], subjects)
              for val, subjects in rules]
-    print(rules)
 
     # Generate initial set of cells
     cells = [{i+1 for i in range(9)} for _ in range(9 ** 2)]
@@ -89,10 +87,7 @@ def main(target):
 
 
 def core(cells, rules):
-    global ITERCOUNT
     """Solve the problem given"""
-
-    ITERCOUNT += 1
 
     # Do some deductive phase here
     deduction_made = True  # Controls whether we go around the loop again
@@ -160,9 +155,6 @@ def core(cells, rules):
 
                     deduction_made = True
         rules = list(filter(lambda x: x[1], rules))  # Filter out empty rules
-
-    check = sum([len(cell) for cell in cells])
-    print(ITERCOUNT, check)
 
     # Do some branching phase
     best_cell = None
