@@ -60,7 +60,13 @@ added extra constraint
 33377 add_value_calls
 6631 bad_guesses
 
-
+removed asserts
+0.0209 seconds to run problem 1
+87 add_value_calls
+1 bad_guesses
+6.6137 seconds to run problem 2
+31171 add_value_calls
+6631 bad_guesses
 """
 import doctest
 
@@ -232,9 +238,9 @@ def add_value(board, sections, loc, single_possibility):
     >>> board[9] & 256
     0
     """
-    assert 0 <= loc < 81
-    assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
-    assert single_possibility != board[loc]
+    # assert 0 <= loc < 81
+    # assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
+    # assert single_possibility != board[loc]
     add_value_calls += 1
     # if add_value_calls == 1:
     #    slow_consistency_check(board, sections)
@@ -242,26 +248,19 @@ def add_value(board, sections, loc, single_possibility):
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
 
+    # if all the squares in a section are solved check that the section has the right total
+    section = sections[loc]
+    if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
+        if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
+            # assert False
+            raise Contradiction
+        # assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
+
     # we now know that the value in the current square can't be found in any of the neighbors
     for loc2 in friends[loc]:
         # only do the work to remove a value if the value is currently considered possible
         if single_possibility & board[loc2]:
             remove_possibilities(board, sections, loc2, single_possibility, True)
-
-    # if all the squares in a section are solved check that the section has the right total
-    section = sections[loc]
-    if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
-        if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
-            # print(sections[loc])
-            # print([board[loc] for loc in section['locs']])
-            # print(loc)
-            # print(add_value_calls)
-
-            # assert False
-            raise Contradiction
-        assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
-
-    # slow_consistency_check(board, sections)
 
 
 def remove_possibilities(board, sections, loc, possibilities, recurse):
@@ -352,7 +351,6 @@ def main(problem):
     # problem = problem[-1:]
     sections = setup(problem)
     board = init_board(sections)
-    slow_consistency_check(board, sections)  # todo remove
     solved_board = solver(board, sections)
     # print_board(solved_board)
     return solved_board
