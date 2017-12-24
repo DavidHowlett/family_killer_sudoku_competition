@@ -17,4 +17,5 @@ Rules
 - Don't copy other people's code.
 - All solutions must be written in python.
 - You must write a general solver capable of solving all killer sudoku problems. 
-- Specialising your solver for the problems provided is not allowed.
+- Don't specialise your solver for the problems provided.
+- Your program should be called <your name>s_solver.py
