@@ -67,6 +67,14 @@ removed asserts
 6.6137 seconds to run problem 2
 31171 add_value_calls
 6631 bad_guesses
+
+removed call to union
+0.0145 seconds to run problem 1
+87 add_value_calls
+1 bad_guesses
+4.4375 seconds to run problem 2
+34710 add_value_calls
+6631 bad_guesses
 """
 import doctest
 
@@ -299,10 +307,14 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
         for loc2 in group:
             # don't bother looking at squares that already known
             if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                digits_unaccounted_for = 511 ^ union(board[loc] for loc in group if loc2 != loc)
+                found_digits = 0
+                for loc3 in group:
+                    if loc3 != loc2:
+                        found_digits = found_digits | board[loc3]
+                digits_unaccounted_for = 511 ^ found_digits
                 if digits_unaccounted_for:
-                    if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                        raise Contradiction
+                    # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    #    raise Contradiction
                     add_value(board, sections, loc2, digits_unaccounted_for)
 
 
