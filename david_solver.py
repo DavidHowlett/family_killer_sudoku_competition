@@ -294,8 +294,6 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
         for loc2 in section['locs']:
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
 
-    # return
-    # slow_consistency_check(board, sections)
     # check if this leaves a group of 9 where a number can only be in one location
     for group in static_groups[loc]:
         for loc2 in group:
