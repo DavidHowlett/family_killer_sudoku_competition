@@ -26,16 +26,15 @@ import time
 ITERCOUNT = 0
 
 
-
 class RuleViolationError(RuntimeError):
     pass
 
 
 def load_problem(target):
     """Load the problem from the file"""
-    from problems import problem2 as raw
+    from problems import problems
 
-    problem = raw
+    problem = problems[target]
 
     # Add basic sudoku rules (implied)
     # This can be moved to import time
@@ -155,5 +154,5 @@ def core(cells, rules):
 
 if __name__ == '__main__':
     ct = time.time()
-    main("test.txt")
+    main("problem 2")
     print(time.time()-ct)
