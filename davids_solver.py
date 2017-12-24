@@ -17,15 +17,24 @@ x if 5 is only allowed in one square in a group (of size 9) set that square to 5
 
 
 solve time history:
+
 initial solver time
 1.856   problem1
+
 fixed a bug
 1.027   problem1
+
 switched to bitwise sets
 0.131 problem1
+
 removed slow_consistency_checker from critical path
 0.0137 problem1
 
+prune valid combos
+0.0059 seconds to run
+152 add_value_calls
+23.2418 seconds to run
+289498 add_value_calls
 """
 import doctest
 
@@ -182,6 +191,7 @@ def slow_consistency_check(board, sections):
 
 
 def add_value(board, sections, loc, single_possibility):
+    global add_value_calls
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function will change the given board and sections. It may raise a Contradiction.
     >>> import problems
@@ -190,42 +200,55 @@ def add_value(board, sections, loc, single_possibility):
     >>> add_value(board, sections, 0, 256)
     >>> board[0]
     256
-    >>> board[1] & 256
-    0
+    >>> board[1]
+    64
     >>> board[9] & 256
     0
     """
     assert 0 <= loc < 81
     assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
+    add_value_calls += 1
     # set the current square
     board[loc] = single_possibility
-
-    '''
-    new_section = sections[loc][:]
-    new_section['combos'] = [combo for combo in new_section['combos'] if single_possibility & combo]
-    for loc in new_section['locs']:
-        sections[loc] = new_section
-    '''
-
-
     section = sections[loc]
+    section['combos'] = [combo for combo in section['combos'] if single_possibility & combo]
+    for section_loc in section['locs']:
+        remove_possibilities(board, sections, section_loc, ~union(section['combos']))
+
     # if all the squares in a section are solved check that the section has the right total
     if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
         if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
+            print([board[loc] for loc in section['locs']])
+            # assert False
             raise Contradiction
         assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
 
     # we now know that the value in the current square can't be found in any of the neighbors
     for loc2 in friends[loc]:
-        # only do the work to remove a value if the value is considered possible
+        # only do the work to remove a value if the value is currently considered possible
         if single_possibility & board[loc2]:
-            board[loc2] = (~single_possibility) & board[loc2]
-            if board[loc2] == 0:
-                raise Contradiction
-            if board[loc2] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                add_value(board, sections, loc2, board[loc2])
-            # todo here you should check if this leaves a group of 9 where a number can only be in one location
-    slow_consistency_check(board, sections)
+            remove_possibilities(board, sections, loc2, single_possibility)
+    # slow_consistency_check(board, sections)
+
+
+def remove_possibilities(board, sections, loc, possibilities):
+    """This takes a board and removes a collection of possibilities from a single square
+    >>> import problems
+    >>> sections = setup(problems.problem1)
+    >>> board = init_board(sections)
+    >>> remove_possibilities(board, sections, 0, 64)
+    >>> board[0]
+    256
+    >>> board[1]
+    64
+    """
+    initial_square = board[loc]
+    board[loc] = (~possibilities) & initial_square
+    if board[loc] == 0:
+        raise Contradiction
+    if board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} and board[loc] != initial_square:
+        add_value(board, sections, loc, board[loc])
+    # todo here you should check if this leaves a group of 9 where a number can only be in one location
 
 
 def solver(board, sections):
@@ -250,8 +273,9 @@ def solver(board, sections):
             continue
         try:
             possible_board = board[:]
-            add_value(possible_board, sections, loc_to_guess, possibility)
-            return solver(possible_board, sections)
+            possible_sections = [s.copy() for s in sections]
+            add_value(possible_board, possible_sections, loc_to_guess, possibility)
+            return solver(possible_board, possible_sections)
         except Contradiction:
             # then that particular guess is wrong
             pass
@@ -288,6 +312,7 @@ cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
 static_groups = rows + cols + boxes
+add_value_calls = 0
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
