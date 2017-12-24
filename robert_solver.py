@@ -47,7 +47,7 @@ def load_problem(target):
 
     # Convert from dual index to single index
     for index, rule in enumerate(problem):
-        problem[index] = (rule[0], [row*9+col for row, col in rule[1]])
+        problem[index] = (rule[0], {row*9+col for row, col in rule[1]})
 
     return problem
 
@@ -138,7 +138,7 @@ def core(cells, rules):
                 # Current set is empty, matches with every set but uselessly
                 continue
             for possibles2, targets2 in rules:
-                if set(targets1).issubset(set(targets2)) and targets1 is not targets2:
+                if targets1.issubset(targets2) and targets1 is not targets2:
                     # We can subtract rule1 from rule2!
                     for t in targets1:
                         targets2.remove(t)
