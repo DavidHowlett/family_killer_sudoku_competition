@@ -95,15 +95,16 @@ def core(cells, rules):
         deduction_made = False
         # Do rule vs cell comparison
         for possibles, targets in rules:
-            if not len(targets):
-                # rule satisfied, skip
-                continue
             # Some values in cells have been fixed, so we can simplify the rule, make it apply to fewer cells
             for target in list(targets):
                 if len(cells[target]) == 1:
                     fixed_value = next(iter(cells[target]))  # Grab the value of the cell
-                    for possible in possibles:
-                        possible -= {fixed_value}
+                    for possible in possibles[:]:
+                        try:
+                            possible.remove(fixed_value)
+                        except KeyError:
+                            # Bad possibility!
+                            possibles.remove(possible)
                     targets.remove(target)
 
             # A value is not available in some cells, so some rule solutions are no longer valid
