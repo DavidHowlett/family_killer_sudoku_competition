@@ -30,19 +30,29 @@ switched to bitwise sets
 removed slow_consistency_checker from critical path
 0.0137 problem1
 
-prune valid combos
+prune some invalid combos
 0.0059 seconds to run
 152 add_value_calls
 23.2418 seconds to run
 289498 add_value_calls
 
-prune more valid combos
-0.0047 seconds to run for  problem 1
+prune more invalid combos
+0.0054 seconds to run problem 1
 117 add_value_calls
 4 bad_guesses
-8.6340 seconds to run for  problem 2
+8.4603 seconds to run problem 2
 231125 add_value_calls
 76425 bad_guesses
+
+reset counters on problem start
+0.0051 seconds to run problem 1
+117 add_value_calls
+4 bad_guesses
+8.4074 seconds to run problem 2
+231008 add_value_calls
+76421 bad_guesses
+
+
 
 
 """
@@ -105,7 +115,7 @@ def section_sum(x):
 def setup(problem):
     """This defines all the globals needed and returns a formatted list of sections
     >>> import problems
-    >>> sections = setup(problems.problem1)
+    >>> sections = setup(problems.problems['problem 1'])
     >>> sections[4]
     {'total': 10, 'locs': {4, 5}, 'combos': frozenset({40, 257, 130, 68})}
     """
@@ -134,7 +144,7 @@ def setup(problem):
 def init_board(sections):
     """Create a board from a list of sections
     >>> import problems
-    >>> sections = setup(problems.problem1)
+    >>> sections = setup(problems.problems['problem 1'])
     >>> board = init_board(sections)
     >>> len(board)
     81
@@ -220,7 +230,6 @@ def add_value(board, sections, loc, single_possibility):
     add_value_calls += 1
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
-    #board[loc] = single_possibility
 
     # we now know that the value in the current square can't be found in any of the neighbors
     for loc2 in friends[loc]:
@@ -246,7 +255,7 @@ def add_value(board, sections, loc, single_possibility):
 def remove_possibilities(board, sections, loc, possibilities, recurse):
     """This takes a board and removes a collection of possibilities from a single square
     >>> import problems
-    >>> sections = setup(problems.problem1)
+    >>> sections = setup(problems.problems['problem 1'])
     >>> board = init_board(sections)
     >>> remove_possibilities(board, sections, 0, 64)
     >>> board[0]
@@ -310,6 +319,10 @@ def solver(board, sections):
 
 
 def main(problem):
+    global add_value_calls
+    global bad_guesses
+    add_value_calls = 0
+    bad_guesses = 0
     # problem = problem[-1:]
     sections = setup(problem)
     board = init_board(sections)
@@ -331,22 +344,21 @@ assert val_to_set[2] == 2
 assert val_to_set[3] == 4
 assert val_to_set[4] == 8
 
+add_value_calls = None
+bad_guesses = None
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
 static_groups = rows + cols + boxes
-add_value_calls = 0
-bad_guesses = 0
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
 # this looks like combo[length][total]
-combos = [[
-    frozenset(possible_section for possible_section in combos
-              if pop_count(possible_section) == length and section_sum(possible_section) == total)
-    for total in range(46)] for length in range(9)]
-assert combos[2][3] == frozenset({3})
+combos = [[[possible_section for possible_section in combos
+            if pop_count(possible_section) == length and section_sum(possible_section) == total]
+           for total in range(46)] for length in range(9)]
+assert combos[2][3] == [3]
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
-assert combos[2][5] == frozenset({6, 9})
+assert combos[2][5] == [6, 9]
 doctest.testmod()
