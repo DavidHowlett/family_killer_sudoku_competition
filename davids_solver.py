@@ -52,7 +52,13 @@ reset counters on problem start
 231008 add_value_calls
 76421 bad_guesses
 
-
+added extra constraint
+0.0196 seconds to run problem 1
+87 add_value_calls
+1 bad_guesses
+7.1403 seconds to run problem 2
+33377 add_value_calls
+6631 bad_guesses
 
 
 """
@@ -117,7 +123,7 @@ def setup(problem):
     >>> import problems
     >>> sections = setup(problems.problems['problem 1'])
     >>> sections[4]
-    {'total': 10, 'locs': {4, 5}, 'combos': frozenset({40, 257, 130, 68})}
+    {'total': 10, 'locs': {4, 5}, 'combos': [40, 68, 130, 257]}
     """
     global friends
     global groups
@@ -163,7 +169,7 @@ def init_board(sections):
 def print_board(board):
     """ This prints a board in a human readable form
     >>> import problems
-    >>> sections = setup(problems.problem1)
+    >>> sections = setup(problems.problems['problem 1'])
     >>> board = init_board(sections)
     >>> add_value(board, sections, 0, 256)
     >>> print_board(board)
@@ -213,7 +219,8 @@ def slow_consistency_check(board, sections):
 def add_value(board, sections, loc, single_possibility):
     global add_value_calls
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
-    This function will change the given board and sections. It may raise a Contradiction.
+    This function will change the given board and sections. It may raise a Contradiction. 
+    Only call add_value on squares that don't have a value already.
     >>> import problems
     >>> sections = setup(problems.problem1)
     >>> board = init_board(sections)
@@ -227,7 +234,11 @@ def add_value(board, sections, loc, single_possibility):
     """
     assert 0 <= loc < 81
     assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
+    assert single_possibility != board[loc]
     add_value_calls += 1
+    # if add_value_calls == 1:
+    #    slow_consistency_check(board, sections)
+    #    print('trouble brewing')
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
 
@@ -244,6 +255,7 @@ def add_value(board, sections, loc, single_possibility):
             # print(sections[loc])
             # print([board[loc] for loc in section['locs']])
             # print(loc)
+            # print(add_value_calls)
 
             # assert False
             raise Contradiction
@@ -257,7 +269,7 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
     >>> import problems
     >>> sections = setup(problems.problems['problem 1'])
     >>> board = init_board(sections)
-    >>> remove_possibilities(board, sections, 0, 64)
+    >>> remove_possibilities(board, sections, 0, 64, True)
     >>> board[0]
     256
     >>> board[1]
@@ -266,9 +278,11 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
-    board[loc] = (~possibilities) & board[loc]
-    if board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
-        add_value(board, sections, loc, board[loc])
+    new_possibilities = (~possibilities) & board[loc]
+    if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
+        add_value(board, sections, loc, new_possibilities)
+    else:
+        board[loc] = new_possibilities
     if board[loc] == 0:
         raise Contradiction
 
@@ -280,7 +294,19 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
         section['combos'] = new_combos
         for loc2 in section['locs']:
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
-        # todo here you should check if this leaves a group of 9 where a number can only be in one location
+
+    # return
+    # slow_consistency_check(board, sections)
+    # check if this leaves a group of 9 where a number can only be in one location
+    for group in static_groups[loc]:
+        for loc2 in group:
+            # don't bother looking at squares that already known
+            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                digits_unaccounted_for = 511 ^ union(board[loc] for loc in group if loc2 != loc)
+                if digits_unaccounted_for:
+                    if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                        raise Contradiction
+                    add_value(board, sections, loc2, digits_unaccounted_for)
 
 
 def solver(board, sections):
@@ -327,7 +353,9 @@ def main(problem):
     sections = setup(problem)
     board = init_board(sections)
     slow_consistency_check(board, sections)  # todo remove
-    return solver(board, sections)
+    solved_board = solver(board, sections)
+    # print_board(solved_board)
+    return solved_board
 
 
 set_to_val = {1 << i: i+1 for i in range(9)}
@@ -344,13 +372,13 @@ assert val_to_set[2] == 2
 assert val_to_set[3] == 4
 assert val_to_set[4] == 8
 
-add_value_calls = None
-bad_guesses = None
+add_value_calls = 0
+bad_guesses = 0
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
-static_groups = rows + cols + boxes
+static_groups = [[group for group in rows + cols + boxes if loc in group] for loc in range(81)]
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
