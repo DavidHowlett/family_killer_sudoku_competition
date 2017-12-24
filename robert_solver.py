@@ -1,4 +1,3 @@
-import copy
 import time
 # Middle of problem state:
 # List of cells
@@ -52,6 +51,14 @@ def load_problem(target):
         problem[index] = (rule[0], [row*9+col for row, col in rule[1]])
 
     return problem
+
+
+def copy_custom(cells, rules):
+    """Slightly faster version of deepcopy
+
+    Deepcopy also copies immutable things like ints, so this is much faster"""
+    return [cell.copy() for cell in cells], \
+           [([p.copy() for p in possibles], targets.copy()) for possibles, targets in rules]
 
 
 def main(target):
@@ -173,7 +180,7 @@ def core(cells, rules):
         for possible in list(cells[best_cell]):
             cells[best_cell] = {possible, }
             try:
-                return core(copy.deepcopy(cells), copy.deepcopy(rules))
+                return core(*copy_custom(cells, rules))
             except RuleViolationError:
                 pass
         else:
