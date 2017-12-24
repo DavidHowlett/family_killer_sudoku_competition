@@ -136,7 +136,7 @@ def print_board(board):
     >>> import problems
     >>> sections = setup(problems.problem1)
     >>> board = init_board(sections)
-    >>> board = add_value(board, sections, 0, 256)
+    >>> add_value(board, sections, 0, 256)
     >>> print_board(board)
     9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
     . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
@@ -183,12 +183,11 @@ def slow_consistency_check(board, sections):
 
 def add_value(board, sections, loc, single_possibility):
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
-    This function does not change the board given.
-    It will either return a board or raise a Contradiction.
+    This function will change the given board and sections. It may raise a Contradiction.
     >>> import problems
     >>> sections = setup(problems.problem1)
     >>> board = init_board(sections)
-    >>> board = add_value(board, sections, 0, 256)
+    >>> add_value(board, sections, 0, 256)
     >>> board[0]
     256
     >>> board[1] & 256
@@ -198,9 +197,16 @@ def add_value(board, sections, loc, single_possibility):
     """
     assert 0 <= loc < 81
     assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
-    board = board[:]
     # set the current square
     board[loc] = single_possibility
+
+    '''
+    new_section = sections[loc][:]
+    new_section['combos'] = [combo for combo in new_section['combos'] if single_possibility & combo]
+    for loc in new_section['locs']:
+        sections[loc] = new_section
+    '''
+
 
     section = sections[loc]
     # if all the squares in a section are solved check that the section has the right total
@@ -217,10 +223,9 @@ def add_value(board, sections, loc, single_possibility):
             if board[loc2] == 0:
                 raise Contradiction
             if board[loc2] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                board = add_value(board, sections, loc2, board[loc2])
+                add_value(board, sections, loc2, board[loc2])
             # todo here you should check if this leaves a group of 9 where a number can only be in one location
     slow_consistency_check(board, sections)
-    return board
 
 
 def solver(board, sections):
@@ -244,7 +249,8 @@ def solver(board, sections):
         if not possibility & board[loc_to_guess]:
             continue
         try:
-            possible_board = add_value(board, sections, loc_to_guess, possibility)
+            possible_board = board[:]
+            add_value(possible_board, sections, loc_to_guess, possibility)
             return solver(possible_board, sections)
         except Contradiction:
             # then that particular guess is wrong

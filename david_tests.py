@@ -19,10 +19,3 @@ if __name__ == '__main__':
         "solved(7)", setup='def solved(x):return (x in {1,2,4,8,16,32,64,128,256})', number=1_000_000))
 
     print('it all works!')
-
-'''
-    new_section = sections[loc][:]
-    new_section['combos'] = [combo for combo in new_section['combos'] if single_possibility & combo]
-    for loc in new_section['locs']:
-        sections[loc] = new_section
-    '''
