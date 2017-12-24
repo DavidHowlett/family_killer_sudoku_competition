@@ -33,7 +33,7 @@ class RuleViolationError(RuntimeError):
 
 def load_problem(target):
     """Load the problem from the file"""
-    from problems import problem1 as raw
+    from problems import problem2 as raw
 
     problem = raw
 
@@ -83,11 +83,12 @@ def main(target):
 
 
 def core(cells, rules):
+    global ITERCOUNT
     """Solve the problem given"""
-    # Do some deductive phase here
-    cells = copy.deepcopy(cells)
-    rules = copy.deepcopy(rules)
 
+    ITERCOUNT += 1
+
+    # Do some deductive phase here
     deduction_made = True  # Controls whether we go around the loop again
     while deduction_made:
         deduction_made = False
@@ -125,6 +126,9 @@ def core(cells, rules):
                     deduction_made = True
                     cells[target] -= removables
 
+    check = sum([len(cell) for cell in cells])
+    print(ITERCOUNT, check)
+
     # Do some branching phase
     best_cell = None
     best_qual = 9999
@@ -134,9 +138,6 @@ def core(cells, rules):
             best_cell = cell
             best_qual = len(possibles)
 
-    check = sum([len(cell) for cell in cells])
-    print(check)
-
     if best_cell is None:
         # Could not branch at all, so must have found optimal solution
         return cells
@@ -144,7 +145,7 @@ def core(cells, rules):
         for possible in list(cells[best_cell]):
             cells[best_cell] = {possible, }
             try:
-                return core(cells, rules)
+                return core(copy.deepcopy(cells), copy.deepcopy(rules))
             except RuleViolationError:
                 pass
         else:
