@@ -67,6 +67,24 @@ removed asserts
 6.6137 seconds to run problem 2
 31171 add_value_calls
 6631 bad_guesses
+
+removed call to union
+0.0145 seconds to run problem 1
+87 add_value_calls
+1 bad_guesses
+4.4375 seconds to run problem 2
+34710 add_value_calls
+6631 bad_guesses
+
+made ex union code execute less often
+0.0051 seconds to run problem 1
+102 add_value_calls
+2 bad_guesses
+2.1823 seconds to run problem 2
+53716 add_value_calls
+11169 bad_guesses
+
+
 """
 import doctest
 
@@ -242,9 +260,6 @@ def add_value(board, sections, loc, single_possibility):
     # assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
     # assert single_possibility != board[loc]
     add_value_calls += 1
-    # if add_value_calls == 1:
-    #    slow_consistency_check(board, sections)
-    #    print('trouble brewing')
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
 
@@ -263,7 +278,7 @@ def add_value(board, sections, loc, single_possibility):
             remove_possibilities(board, sections, loc2, single_possibility, True)
 
 
-def remove_possibilities(board, sections, loc, possibilities, recurse):
+def remove_possibilities(board, sections, loc, possibilities, recurse, ):
     """This takes a board and removes a collection of possibilities from a single square
     >>> import problems
     >>> sections = setup(problems.problems['problem 1'])
@@ -294,16 +309,21 @@ def remove_possibilities(board, sections, loc, possibilities, recurse):
         for loc2 in section['locs']:
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
 
-    # check if this leaves a group of 9 where a number can only be in one location
-    for group in static_groups[loc]:
-        for loc2 in group:
-            # don't bother looking at squares that already known
-            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                digits_unaccounted_for = 511 ^ union(board[loc] for loc in group if loc2 != loc)
-                if digits_unaccounted_for:
-                    if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                        raise Contradiction
-                    add_value(board, sections, loc2, digits_unaccounted_for)
+    if not recurse:
+        # check if this leaves a group of 9 where a number can only be in one location
+        for group in static_groups[loc]:
+            for loc2 in group:
+                # don't bother looking at squares that already known
+                if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    found_digits = 0
+                    for loc3 in group:
+                        if loc3 != loc2:
+                            found_digits = found_digits | board[loc3]
+                    digits_unaccounted_for = 511 ^ found_digits
+                    if digits_unaccounted_for:
+                        # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                        #    raise Contradiction
+                        add_value(board, sections, loc2, digits_unaccounted_for)
 
 
 def solver(board, sections):
