@@ -91,6 +91,7 @@ def core(cells, rules):
     deduction_made = True  # Controls whether we go around the loop again
     while deduction_made:
         deduction_made = False
+        # Do rule vs cell comparison
         for possibles, targets in rules:
             if not len(targets):
                 # rule satisfied, skip
@@ -124,6 +125,34 @@ def core(cells, rules):
                 if removables:
                     deduction_made = True
                     cells[target] -= removables
+
+        # Check for rules that are subsets of each other
+        for possibles1, targets1 in rules:
+            if len(possibles1) != 1:
+                # Current algorithm a little dumb, only handles case with single combination in inner
+                continue
+            possible1 = possibles1[0]
+            if len(possible1) == 0:
+                # Current set is empty, matches with every set but uselessly
+                continue
+            for possibles2, targets2 in rules:
+                if set(targets1).issubset(set(targets2)) and targets1 is not targets2:
+                    # We can subtract rule1 from rule2!
+                    for t in targets1:
+                        targets2.remove(t)
+
+                    # Kill off possibles2 that don't contain possible1
+                    for possible in list(possibles2):
+                        if not possible1.issubset(possible):
+                            possibles2.remove(possible)
+
+                    # Reduce possibles2 by possible1
+                    for p in possibles2:
+                        for e in possibles1[0]:
+                            p.remove(e)
+
+                    deduction_made = True
+
 
     check = sum([len(cell) for cell in cells])
     print(ITERCOUNT, check)
