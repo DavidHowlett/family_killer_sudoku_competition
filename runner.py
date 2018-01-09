@@ -1,5 +1,4 @@
 from time import perf_counter as now
-import copy
 import problems
 import david_solver
 import robert_solver
@@ -21,17 +20,17 @@ if __name__ == '__main__':
 
     for problem_name, problem in problems.problems.items():
         start_time = now()
-        micheal_solver.main(copy.deepcopy(problem))
-        run_time = now()-start_time
-        micheal_total_time += run_time
-        print(f'Micheal took {run_time:.4f} seconds to run', problem_name)
-
-    for problem_name, problem in problems.problems.items():
-        start_time = now()
-        robert_solver.main(problem_name)
+        robert_solver.main(problem)
         run_time = now()-start_time
         robert_total_time += run_time
         print(f'Robert took {run_time:.4f} seconds to run', problem_name)
+
+    for problem_name, problem in problems.problems.items():
+        start_time = now()
+        micheal_solver.main(problem)
+        run_time = now()-start_time
+        micheal_total_time += run_time
+        print(f'Micheal took {run_time:.4f} seconds to run', problem_name)
 
 print('David total time:', david_total_time)
 print('Robert total time:', robert_total_time)

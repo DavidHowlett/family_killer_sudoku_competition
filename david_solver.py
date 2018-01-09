@@ -364,7 +364,6 @@ def solver(board, sections):
     min_possibility_count = 999
     # find the uncertain square with the least possible values
     for loc in range(81):
-        loc = loc * 10 % 81  # this line spreads out the guesses
         possibility_count = pop_count(board[loc])
         if 1 < possibility_count < min_possibility_count:
             min_possibility_count = possibility_count

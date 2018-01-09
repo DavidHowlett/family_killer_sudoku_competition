@@ -1,4 +1,7 @@
 import time
+import copy
+import problems
+
 # Middle of problem state:
 # List of cells
 #   containing set of possible values
@@ -30,12 +33,9 @@ class RuleViolationError(RuntimeError):
     pass
 
 
-def load_problem(target):
-    """Load the problem from the file"""
-    from problems import problems
+def init_problem(problem):
 
-    problem = problems[target]
-
+    problem = copy.deepcopy(problem)  # to avoid trouble for David and Micheal
     # Add basic sudoku rules (implied)
     # This can be moved to import time
     # Rows contain unique 1-9
@@ -62,7 +62,7 @@ def copy_custom(cells, rules):
            [([p.copy() for p in possibles], targets.copy()) for possibles, targets in rules]
 
 
-def main(target):
+def main(problem):
     """Solve the problem given in target"""
 
     # Create a dictionary of all possible combinations
@@ -75,7 +75,7 @@ def main(target):
         combinations[sum(nums)] += [nums]
 
     # Load problem
-    rules = load_problem(target)
+    rules = init_problem(problem)
 
     # Replace target values with combinations
     rules = [([combo.copy() for combo in combinations[val] if len(combo) == len(subjects)], subjects)
@@ -193,5 +193,5 @@ def core(cells, rules):
 
 if __name__ == '__main__':
     ct = time.time()
-    main("problem 2")
+    main(problems.problems["problem 2"])
     print(time.time()-ct)

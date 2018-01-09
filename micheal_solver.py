@@ -9,7 +9,6 @@ import datetime
 
 counter = 0
 
-
 def solve(supo, sums, sum2,bi,ci,ri):
     # supo=suduko posibillities
     # sums=list of lists which contain a list of loactions and what they add up to
@@ -196,7 +195,7 @@ sums = [
 
 
 def main(problem):
-    # problem = [[b, a] for a, b in problem]
+    problem = copy.deepcopy(problem)
     for i in problem:
         i[0], i[1] = i[1], i[0]
 
