@@ -88,6 +88,31 @@ problems = {
         [17, [[6, 7], [6, 8]]],
         [3,  [[7, 7], [7, 8]]],
         [23, [[2, 8], [3, 8], [4, 8], [5, 8]]]
+    ],
+    'Grandad slow problem': [
+        [15, [[0, 0], [1, 0], [1, 1], [1, 2], [1, 3]]],
+        [19, [[2, 0], [3, 0], [4, 0], [3, 1], [4, 1]]],
+        [38, [[5, 0], [5, 1], [6, 1], [6, 2], [6, 3], [7, 3]]],
+        [23, [[6, 0], [7, 0], [7, 1]]],
+        [3,  [[8, 0], [8, 1]]],
+        [23, [[0, 1], [0, 2], [0, 3]]],
+        [16, [[2, 1], [2, 2]]],
+        [11, [[3, 2], [3, 3], [4, 2]]],
+        [16, [[5, 2], [5, 3], [4, 3], [4, 4]]],
+        [25, [[7, 2], [8, 2], [8, 3], [8, 4]]],
+        [13, [[2, 3], [2, 4], [3, 4]]],
+        [10, [[0, 4], [1, 4]]],
+        [18, [[5, 4], [6, 4], [5, 5]]],
+        [11, [[7, 4], [7, 5], [6, 5], [6, 6]]],
+        [30, [[0, 5], [1, 5], [2, 5], [0, 6], [1, 6]]],
+        [22, [[3, 5], [4, 5], [4, 6], [4, 7]]],
+        [34, [[8, 5], [7, 6], [8, 6], [7, 7], [8, 7]]],
+        [22, [[2, 6], [3, 6], [2, 7], [3, 7]]],
+        [6,  [[5, 6], [5, 7], [5, 8]]],
+        [18, [[0, 7], [1, 7], [0, 8], [1, 8]]],
+        [10, [[6, 7], [6, 8], [7, 8], [8, 8]]],
+        [22, [[2, 8], [3, 8], [4, 8]]],
+
     ]
 }
 
@@ -111,6 +136,27 @@ for problem in problems.values():
     if total != 5*9*9:
         print('the total value of the squares is', total, 'which is wrong. It should be', 5*9*9)
 
+grouped_problems = dict()
+for original_name, original_problem in problems.copy().items():
+    to_duplicate = {original_name: original_problem}
+    # expand problem set with rotational invariance
+    for name, problem in to_duplicate.copy().items():
+        to_duplicate[name + ' rotated'] = [[_total, [[y, 8-x] for x, y in rule]] for _total, rule in problem]
+
+    # expand problem set with inversion invariance
+    for name, problem in to_duplicate.copy().items():
+        to_duplicate[name + ' inverted'] = [[_total, [[8-x, 8-y] for x, y in rule]] for _total, rule in problem]
+
+    # expand problem set with reflection invariance
+    for name, problem in to_duplicate.copy().items():
+        to_duplicate[name + ' reflected'] = [[_total, [[8-x, y] for x, y in rule]] for _total, rule in problem]
+
+    # expand problem set with numerical flipping (1->9 and 7->3)
+    for name, problem in to_duplicate.copy().items():
+        to_duplicate[name + ' flipped'] = [[
+            len(rule)*10-_total, [[x, y] for x, y in rule]] for _total, rule in problem]
+    grouped_problems.update(to_duplicate)
+problems = grouped_problems
 # Michael wanted the problems flipped to be the same as in his code
 michael_style_problems = {key: [(b, a) for a, b in problems[key]] for key in problems}
 # print(michael_style_problems)

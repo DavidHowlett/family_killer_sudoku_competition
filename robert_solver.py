@@ -23,6 +23,8 @@ import time
 # Therefore choose a cell, and examine every possibility.
 #
 
+ITERCOUNT = 0
+
 
 class RuleViolationError(RuntimeError):
     pass
@@ -82,16 +84,19 @@ def main(target):
     # Generate initial set of cells
     cells = [{i+1 for i in range(9)} for _ in range(9 ** 2)]
 
-    result = core(cells, rules)
-    print(result)
+    return core(cells, rules)
 
 
 def core(cells, rules):
     """Solve the problem given"""
 
+    global ITERCOUNT
+
+    # print(ITERCOUNT)
     # Do some deductive phase here
     deduction_made = True  # Controls whether we go around the loop again
     while deduction_made:
+        ITERCOUNT += 1
         deduction_made = False
         # Do rule vs cell comparison
         for possibles, targets in rules:
@@ -128,6 +133,8 @@ def core(cells, rules):
                 if removables:
                     deduction_made = True
                     cells[target] -= removables
+                    if not cells[target]:
+                        raise RuleViolationError
 
         # Check for rules that are subsets of each other
         for possibles1, targets1 in rules:
@@ -156,6 +163,9 @@ def core(cells, rules):
 
                     deduction_made = True
         rules = list(filter(lambda x: x[1], rules))  # Filter out empty rules
+
+    if any([not possibles and targets for targets, possibles in rules]):
+        pass #raise RuleViolationError
 
     # Do some branching phase
     best_cell = None

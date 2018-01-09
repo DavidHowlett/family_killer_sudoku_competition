@@ -237,7 +237,7 @@ def slow_consistency_check(board, sections):
 
 
 def add_value(board, sections, loc, single_possibility):
-    # global add_value_calls
+    global add_value_calls
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function will change the given board and sections. It may raise a Contradiction. 
     Only call add_value on squares that don't have a value already.
@@ -252,10 +252,10 @@ def add_value(board, sections, loc, single_possibility):
     >>> board[9] & 256
     0
     """
-    # assert 0 <= loc < 81
+    assert 0 <= loc < 81
     # assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
     # assert single_possibility != board[loc]
-    # add_value_calls += 1
+    add_value_calls += 1
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
 
@@ -306,7 +306,20 @@ def remove_possibilities(board, sections, loc, possibilities, recurse, ):
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
     
     if not recurse:
-        extra_checks(board, sections, loc)
+        # check if this leaves a group of 9 where a number can only be in one location
+        for group in static_groups[loc]:
+            for loc2 in group:
+                # don't bother looking at squares that already known
+                if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    found_digits = 0
+                    for loc3 in group:
+                        if loc3 != loc2:
+                            found_digits = found_digits | board[loc3]
+                    digits_unaccounted_for = 511 ^ found_digits
+                    if digits_unaccounted_for:
+                        # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                        #    raise Contradiction
+                        add_value(board, sections, loc2, digits_unaccounted_for)
 
 
 def extra_checks(board, sections, loc):
@@ -344,7 +357,7 @@ def extra_checks2(board, sections):
 
 
 def solver(board, sections):
-    # global bad_guesses
+    global bad_guesses
     """This solves an arbitrary board by guessing solutions"""
     # print_board(board)
     loc_to_guess = None
@@ -365,15 +378,15 @@ def solver(board, sections):
     for possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
         if not possibility & board[loc_to_guess]:
             continue
+        possible_board = board[:]
+        possible_sections = [s.copy() for s in sections]
         try:
-            possible_board = board[:]
-            possible_sections = [s.copy() for s in sections]
             add_value(possible_board, possible_sections, loc_to_guess, possibility)
             solver(possible_board, possible_sections)
             return possible_board
-        except Exception:
+        except Contradiction:
             # then that particular guess is wrong
-            # bad_guesses += 1
+            bad_guesses += 1
             pass
     # if there is a square on the current board which has no possible values
     # then there is a contradiction somewhere
@@ -382,10 +395,10 @@ def solver(board, sections):
 
 
 def main(problem):
-    # global add_value_calls
-    # global bad_guesses
-    # add_value_calls = 0
-    # bad_guesses = 0
+    global add_value_calls
+    global bad_guesses
+    add_value_calls = 0
+    bad_guesses = 0
     # problem = problem[-1:]
     sections = setup(problem)
     board = init_board(sections)
@@ -408,8 +421,8 @@ assert val_to_set[2] == 2
 assert val_to_set[3] == 4
 assert val_to_set[4] == 8
 
-#add_value_calls = 0
-#bad_guesses = 0
+add_value_calls = 0
+bad_guesses = 0
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
