@@ -1,0 +1,150 @@
+/Users/David/anaconda/bin/python3.6 /Users/David/Code/family_killer_sudoku_competition/runner.py
+David took 0.0055 seconds to run problem 1
+David took 0.0086 seconds to run problem 1 rotated
+David took 0.0034 seconds to run problem 1 inverted
+David took 0.0042 seconds to run problem 1 rotated inverted
+David took 0.0082 seconds to run problem 1 reflected
+David took 0.0120 seconds to run problem 1 rotated reflected
+David took 0.0044 seconds to run problem 1 inverted reflected
+David took 0.0057 seconds to run problem 1 rotated inverted reflected
+David took 0.0166 seconds to run problem 1 flipped
+David took 0.0128 seconds to run problem 1 rotated flipped
+David took 0.0041 seconds to run problem 1 inverted flipped
+David took 0.0035 seconds to run problem 1 rotated inverted flipped
+David took 0.0133 seconds to run problem 1 reflected flipped
+David took 0.0094 seconds to run problem 1 rotated reflected flipped
+David took 0.0045 seconds to run problem 1 inverted reflected flipped
+David took 0.0096 seconds to run problem 1 rotated inverted reflected flipped
+David took 2.1481 seconds to run problem 2
+David took 0.8975 seconds to run problem 2 rotated
+David took 1.9390 seconds to run problem 2 inverted
+David took 1.2656 seconds to run problem 2 rotated inverted
+David took 0.4567 seconds to run problem 2 reflected
+David took 1.7853 seconds to run problem 2 rotated reflected
+David took 2.2770 seconds to run problem 2 inverted reflected
+David took 2.4096 seconds to run problem 2 rotated inverted reflected
+David took 0.6903 seconds to run problem 2 flipped
+David took 2.2923 seconds to run problem 2 rotated flipped
+David took 1.6060 seconds to run problem 2 inverted flipped
+David took 1.1705 seconds to run problem 2 rotated inverted flipped
+David took 2.4308 seconds to run problem 2 reflected flipped
+David took 1.8390 seconds to run problem 2 rotated reflected flipped
+David took 2.2059 seconds to run problem 2 inverted reflected flipped
+David took 0.1488 seconds to run problem 2 rotated inverted reflected flipped
+David took 0.0251 seconds to run Grandad slow problem
+David took 0.1411 seconds to run Grandad slow problem rotated
+David took 0.2066 seconds to run Grandad slow problem inverted
+David took 0.0379 seconds to run Grandad slow problem rotated inverted
+David took 0.0830 seconds to run Grandad slow problem reflected
+David took 0.6954 seconds to run Grandad slow problem rotated reflected
+David took 0.0833 seconds to run Grandad slow problem inverted reflected
+David took 0.0552 seconds to run Grandad slow problem rotated inverted reflected
+David took 0.1829 seconds to run Grandad slow problem flipped
+David took 0.2321 seconds to run Grandad slow problem rotated flipped
+David took 0.1158 seconds to run Grandad slow problem inverted flipped
+David took 0.0683 seconds to run Grandad slow problem rotated inverted flipped
+David took 0.4455 seconds to run Grandad slow problem reflected flipped
+David took 0.0257 seconds to run Grandad slow problem rotated reflected flipped
+David took 0.1904 seconds to run Grandad slow problem inverted reflected flipped
+David took 0.1478 seconds to run Grandad slow problem rotated inverted reflected flipped
+Robert took 0.0500 seconds to run problem 1
+Robert took 0.0284 seconds to run problem 1 rotated
+Robert took 0.0154 seconds to run problem 1 inverted
+Robert took 0.0244 seconds to run problem 1 rotated inverted
+Robert took 0.0158 seconds to run problem 1 reflected
+Robert took 0.0144 seconds to run problem 1 rotated reflected
+Robert took 0.0109 seconds to run problem 1 inverted reflected
+Robert took 0.0140 seconds to run problem 1 rotated inverted reflected
+Robert took 0.0110 seconds to run problem 1 flipped
+Robert took 0.0107 seconds to run problem 1 rotated flipped
+Robert took 0.0110 seconds to run problem 1 inverted flipped
+Robert took 0.0099 seconds to run problem 1 rotated inverted flipped
+Robert took 0.0105 seconds to run problem 1 reflected flipped
+Robert took 0.0107 seconds to run problem 1 rotated reflected flipped
+Robert took 0.0109 seconds to run problem 1 inverted reflected flipped
+Robert took 0.0106 seconds to run problem 1 rotated inverted reflected flipped
+Robert took 0.6232 seconds to run problem 2
+Robert took 0.4966 seconds to run problem 2 rotated
+Robert took 0.7011 seconds to run problem 2 inverted
+Robert took 0.2014 seconds to run problem 2 rotated inverted
+Robert took 0.3840 seconds to run problem 2 reflected
+Robert took 0.3881 seconds to run problem 2 rotated reflected
+Robert took 0.4180 seconds to run problem 2 inverted reflected
+Robert took 0.5331 seconds to run problem 2 rotated inverted reflected
+Robert took 0.1314 seconds to run problem 2 flipped
+Robert took 0.2845 seconds to run problem 2 rotated flipped
+Robert took 0.3814 seconds to run problem 2 inverted flipped
+Robert took 0.5495 seconds to run problem 2 rotated inverted flipped
+Robert took 0.7101 seconds to run problem 2 reflected flipped
+Robert took 0.1902 seconds to run problem 2 rotated reflected flipped
+Robert took 0.3527 seconds to run problem 2 inverted reflected flipped
+Robert took 0.1222 seconds to run problem 2 rotated inverted reflected flipped
+Robert took 0.0300 seconds to run Grandad slow problem
+Robert took 0.0187 seconds to run Grandad slow problem rotated
+Robert took 0.3282 seconds to run Grandad slow problem inverted
+Robert took 0.0712 seconds to run Grandad slow problem rotated inverted
+Robert took 0.0316 seconds to run Grandad slow problem reflected
+Robert took 0.0725 seconds to run Grandad slow problem rotated reflected
+Robert took 0.0208 seconds to run Grandad slow problem inverted reflected
+Robert took 0.0249 seconds to run Grandad slow problem rotated inverted reflected
+Robert took 0.0232 seconds to run Grandad slow problem flipped
+Robert took 0.0412 seconds to run Grandad slow problem rotated flipped
+Robert took 0.1219 seconds to run Grandad slow problem inverted flipped
+Robert took 0.0552 seconds to run Grandad slow problem rotated inverted flipped
+Robert took 0.0703 seconds to run Grandad slow problem reflected flipped
+Robert took 0.0768 seconds to run Grandad slow problem rotated reflected flipped
+Robert took 0.0296 seconds to run Grandad slow problem inverted reflected flipped
+Robert took 0.0440 seconds to run Grandad slow problem rotated inverted reflected flipped
+Michael took 0.0639 seconds to run problem 1
+Michael took 0.1279 seconds to run problem 1 rotated
+Michael took 0.2675 seconds to run problem 1 inverted
+Michael took 0.1756 seconds to run problem 1 rotated inverted
+Michael took 0.1704 seconds to run problem 1 reflected
+Michael took 0.0903 seconds to run problem 1 rotated reflected
+Michael took 0.1057 seconds to run problem 1 inverted reflected
+Michael took 0.0453 seconds to run problem 1 rotated inverted reflected
+Michael took 0.2008 seconds to run problem 1 flipped
+Michael took 0.1416 seconds to run problem 1 rotated flipped
+Michael took 0.1450 seconds to run problem 1 inverted flipped
+Michael took 0.1281 seconds to run problem 1 rotated inverted flipped
+Michael took 0.1895 seconds to run problem 1 reflected flipped
+Michael took 0.1737 seconds to run problem 1 rotated reflected flipped
+Michael took 0.0696 seconds to run problem 1 inverted reflected flipped
+Michael took 0.2283 seconds to run problem 1 rotated inverted reflected flipped
+Michael took 0.0000 seconds to run problem 2
+Michael took 0.0000 seconds to run problem 2 rotated
+Michael took 0.0000 seconds to run problem 2 inverted
+Michael took 0.0000 seconds to run problem 2 rotated inverted
+Michael took 0.0000 seconds to run problem 2 reflected
+Michael took 0.0000 seconds to run problem 2 rotated reflected
+Michael took 0.0000 seconds to run problem 2 inverted reflected
+Michael took 0.0000 seconds to run problem 2 rotated inverted reflected
+Michael took 0.0000 seconds to run problem 2 flipped
+Michael took 0.0000 seconds to run problem 2 rotated flipped
+Michael took 0.0000 seconds to run problem 2 inverted flipped
+Michael took 0.0000 seconds to run problem 2 rotated inverted flipped
+Michael took 0.0000 seconds to run problem 2 reflected flipped
+Michael took 0.0000 seconds to run problem 2 rotated reflected flipped
+Michael took 0.0000 seconds to run problem 2 inverted reflected flipped
+Michael took 0.0000 seconds to run problem 2 rotated inverted reflected flipped
+Michael took 1.0776 seconds to run Grandad slow problem
+Michael took 0.6445 seconds to run Grandad slow problem rotated
+Michael took 3.6586 seconds to run Grandad slow problem inverted
+Michael took 3.2303 seconds to run Grandad slow problem rotated inverted
+Michael took 0.9726 seconds to run Grandad slow problem reflected
+Michael took 3.6715 seconds to run Grandad slow problem rotated reflected
+Michael took 0.5256 seconds to run Grandad slow problem inverted reflected
+Michael took 0.5921 seconds to run Grandad slow problem rotated inverted reflected
+Michael took 0.8425 seconds to run Grandad slow problem flipped
+Michael took 2.1372 seconds to run Grandad slow problem rotated flipped
+Michael took 0.4505 seconds to run Grandad slow problem inverted flipped
+Michael took 2.1128 seconds to run Grandad slow problem rotated inverted flipped
+Michael took 2.4269 seconds to run Grandad slow problem reflected flipped
+Michael took 2.3693 seconds to run Grandad slow problem rotated reflected flipped
+Michael took 1.4984 seconds to run Grandad slow problem inverted reflected flipped
+Michael took 1.6634 seconds to run Grandad slow problem rotated inverted reflected flipped
+David total time: 28.42408605798846
+Robert total time: 7.786005126981763
+Micheal total time: 30.19725162803661
+
+Process finished with exit code 0
