@@ -6,7 +6,9 @@
 # 789
 import copy
 import datetime
-counter=0
+
+counter = 0
+
 
 def solve(supo, sums, sum2,bi,ci,ri):
     # supo=suduko posibillities
@@ -161,7 +163,7 @@ sums = [[[[0, 0], [1, 0]], 16], [[[0, 1], [1, 1]], 5], [[[0, 2], [0, 3]], 11], [
         [[[7, 1], [8, 1], [8, 0]], 17], [[[7, 2], [7, 3]], 13], [[[7, 4], [8, 4]], 7], [[[7, 7], [8, 7]], 7],
         [[[7, 8], [8, 8]], 13], [[[8, 2], [8, 3]], 4], [[[8, 5], [8, 6]], 15]]
 '''
-sums =[
+sums = [
     [13, [[0, 0], [0, 1]]],
     [5, [[1, 0], [1, 1]]],
     [24, [[2, 0], [3, 0], [4, 0], [5, 0]]],
@@ -192,12 +194,21 @@ sums =[
     [23, [[2, 8], [3, 8], [4, 8], [5, 8]]]
 ]
 
-for i in sums:
-    i[0], i[1] = i[1], i[0]
-a = datetime.datetime.now()
-c = solve(supo, sums, sum2,[[],[],[],[],[],[],[],[],[]],[[],[],[],[],[],[],[],[],[]],[[],[],[],[],[],[],[],[],[]])  # solve it
-b = datetime.datetime.now()
-print('it took:', b - a)
-print(counter)
-for i in range(9):
-    print(c[i])
+
+def main(problem):
+    # problem = [[b, a] for a, b in problem]
+    for i in problem:
+        i[0], i[1] = i[1], i[0]
+
+    return solve(supo, problem, sum2, [[], [], [], [], [], [], [], [], []], [[], [], [], [], [], [], [], [], []],
+          [[], [], [], [], [], [], [], [], []])  # solve it
+
+
+if __name__ == '__main__':
+    a = datetime.datetime.now()
+    c = main(sums)
+    b = datetime.datetime.now()
+    print('it took:', b - a)
+    print(counter)
+    for i in range(9):
+        print(c[i])

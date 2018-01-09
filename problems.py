@@ -136,9 +136,11 @@ for problem in problems.values():
     if total != 5*9*9:
         print('the total value of the squares is', total, 'which is wrong. It should be', 5*9*9)
 
+# the odd code below ensures that problems with the same origin stay grouped together in the dict
 grouped_problems = dict()
 for original_name, original_problem in problems.copy().items():
     to_duplicate = {original_name: original_problem}
+
     # expand problem set with rotational invariance
     for name, problem in to_duplicate.copy().items():
         to_duplicate[name + ' rotated'] = [[_total, [[y, 8-x] for x, y in rule]] for _total, rule in problem]
@@ -157,6 +159,3 @@ for original_name, original_problem in problems.copy().items():
             len(rule)*10-_total, [[x, y] for x, y in rule]] for _total, rule in problem]
     grouped_problems.update(to_duplicate)
 problems = grouped_problems
-# Michael wanted the problems flipped to be the same as in his code
-michael_style_problems = {key: [(b, a) for a, b in problems[key]] for key in problems}
-# print(michael_style_problems)
