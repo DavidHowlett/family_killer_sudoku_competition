@@ -8,7 +8,7 @@ import problems
 # List of remaining rules
 #   List/set of cells applying to
 #   set of possible solutions
-#       Either combinations or permuations
+#       Either combinations or permutations
 
 # Deductive component
 #   We apply a rule (a collection of possible solutions) to it's collection of cells
@@ -165,7 +165,7 @@ def core(cells, rules):
         rules = list(filter(lambda x: x[1], rules))  # Filter out empty rules
 
     if any([not possibles and targets for targets, possibles in rules]):
-        pass #raise RuleViolationError
+        pass  # raise RuleViolationError
 
     # Do some branching phase
     best_cell = None
