@@ -22,8 +22,9 @@ Rules
 Result
 ======
 
-On Christmas Eve both Micheal and Robert both conceded victory to David as David appeared to have the fastest solver for both problems available at the time.
+On Christmas Eve both Micheal and Robert both conceded victory to as I appeared to have the fastest solver for both problems available at the time.
 
 
-A few weeks David the number of problems from 2 to 48 and reran the competition. David
-proved that David's solver had been lucky and that Robert's solver was on average faster at the difficult problems.
+A few weeks I increased the number of problems from 2 to 48 and reran the competition. 
+It turned out that my solver had been lucky with the one hard problem available at the 
+time and that Robert's solver was on average faster at the difficult problems.
