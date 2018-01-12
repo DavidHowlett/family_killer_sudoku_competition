@@ -7,8 +7,8 @@ problems quickly.
 
 We all tried to solve a set of killer sudoku problems. 
 We agreed the winner would be the person who solved a test selection of problems 
-fastest. If we can't solve the all the test problems then the winner 
-is the person who solves the greatest number of them.
+fastest. If we didn't manage solve all the test problems then the winner 
+would be the person who solved the greatest number of them.
 
 Rules
 =====
@@ -22,9 +22,8 @@ Rules
 Result
 ======
 
-On Christmas Eve both Micheal and Robert both conceded victory to as I appeared to have the fastest solver for both problems available at the time.
+On Christmas Eve both Micheal and Robert both conceded victory as my solver was the fastest for both of the problems that were available at the time.
 
 
-A few weeks I increased the number of problems from 2 to 48 and reran the competition. 
-It turned out that my solver had been lucky with the one hard problem available at the 
-time and that Robert's solver was on average faster at the difficult problems.
+A few weeks I increased the number of problems from 2 to 48 and re-ran the competition. 
+I maintained the fastest solver for easy problems but Robert's solver was on average faster at difficult problems. My solver made lucky guesses with the one hard problem available at the time of the competition.
