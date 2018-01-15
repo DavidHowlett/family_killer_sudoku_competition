@@ -1,38 +1,37 @@
 from time import perf_counter as now
+import inspect
+import hashlib
 import problems
 import david_solver
 import robert_solver
 import michael_solver
 
-david_total_time = 0
-robert_total_time = 0
-michael_total_time = 0
+solvers = [
+    ('David', david_solver),
+    ('Robert', robert_solver),
+    ('Michael', michael_solver),
+]
 
 if __name__ == '__main__':
-    for problem_name, problem in problems.problems.items():
-        start_time = now()
-        david_solver.main(problem)
-        run_time = now()-start_time
-        david_total_time += run_time
-        print(f'David took {run_time:.4f} seconds to run', problem_name)
-        # print(david_solver.add_value_calls, 'add_value_calls')
-        # print(david_solver.bad_guesses, 'bad_guesses')
+    for author, solver in solvers:
+        solver.total_time_taken = 0
+        for problem_name, problem in problems.problems.items():
+            # this line makes things the same on windows and unix
+            normalised_source = '\n'.join(inspect.getsource(solver).split())
+            hash = hashlib.sha256(normalised_source.encode()).hexdigest()
+            file_name = f'results cache/{hash} {problem_name}.txt'
+            try:
+                run_time = float(open(file_name).read())
+            except FileNotFoundError:
+                # in the event that the lookup fails actually run the test
+                start_time = now()
+                solver.main(problem)
+                run_time = now()-start_time
+                open(file_name, 'w').write(str(run_time))
+            solver.total_time_taken += run_time
+            print(f'{author} took {run_time:.4f} seconds to run {problem_name}')
+            # print(david_solver.add_value_calls, 'add_value_calls')
+            # print(david_solver.bad_guesses, 'bad_guesses')
 
-    for problem_name, problem in problems.problems.items():
-        start_time = now()
-        robert_solver.main(problem)
-        run_time = now()-start_time
-        robert_total_time += run_time
-        print(f'Robert took {run_time:.4f} seconds to run', problem_name)
-
-    for problem_name, problem in problems.problems.items():
-        start_time = now()
-        if '2' not in problem_name:  # problem 2 takes too long to solve right now
-            michael_solver.main(problem)
-        run_time = now()-start_time
-        michael_total_time += run_time
-        print(f'Michael took {run_time:.4f} seconds to run', problem_name)
-
-print('David total time:', david_total_time)
-print('Robert total time:', robert_total_time)
-print('Michael total time:', michael_total_time)
+    for author, solver in solvers:
+        print(f'{author} total time: {solver.total_time_taken}')
