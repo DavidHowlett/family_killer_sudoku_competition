@@ -63,7 +63,10 @@ def copy_custom(cells, rules):
 
 
 def main(problem):
+    global bad_guesses
     """Solve the problem given in target"""
+    # there have been no bad guesses at this point
+    bad_guesses = 0
 
     # Create a dictionary of all possible combinations
     # This can be moved to import time
@@ -84,13 +87,14 @@ def main(problem):
     # Generate initial set of cells
     cells = [{i+1 for i in range(9)} for _ in range(9 ** 2)]
 
-    return core(cells, rules)
+    return core(cells, rules), bad_guesses
 
 
 def core(cells, rules):
     """Solve the problem given"""
 
     global ITERCOUNT
+    global bad_guesses
 
     # print(ITERCOUNT)
     # Do some deductive phase here
@@ -185,7 +189,7 @@ def core(cells, rules):
             try:
                 return core(*copy_custom(cells, rules))
             except RuleViolationError:
-                pass
+                bad_guesses += 1
         else:
             # Euhh, no possible value of best_cell is valid, must violate a rule
             raise RuleViolationError

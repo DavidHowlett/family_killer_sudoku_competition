@@ -7,7 +7,6 @@
 import copy
 import datetime
 
-counter = 0
 
 def solve(supo, sums, sum2,bi,ci,ri):
     # supo=suduko posibillities
@@ -16,7 +15,7 @@ def solve(supo, sums, sum2,bi,ci,ri):
     # bi = box impossibilities = all the known numbers in a box
     # ci = coloumn impossibilities
     # ri = row impossibilities
-    global counter
+    global bad_guesses
     d = 1
     while d == 1:  # for as long as the last attempt solved somthing, search again
         d = 0
@@ -85,7 +84,7 @@ def solve(supo, sums, sum2,bi,ci,ri):
                                             ri2[row].append(supo[row][col][i])
                                             test = solve(testsupo, sums2, sum2,bi2,ci2,ri2)  # test if it is a soloution
                                             if test == 'error':
-                                                counter += 1
+                                                bad_guesses += 1
                                                 break
                                             else:
                                                 return test
@@ -187,6 +186,8 @@ sums = [
 
 
 def main(problem):
+    global bad_guesses
+    bad_guesses = 0
     problem = copy.deepcopy(problem)
     for i in problem:
         i[0], i[1] = i[1], i[0]
@@ -198,7 +199,7 @@ def main(problem):
             d.append([1, 2, 3, 4, 5, 6, 7, 8, 9])
         supo.append(d)  # gets supo to have every number 1:9 as options in every square
     return solve(supo, problem, sum2, [[], [], [], [], [], [], [], [], []], [[], [], [], [], [], [], [], [], []],
-          [[], [], [], [], [], [], [], [], []])  # solve it
+          [[], [], [], [], [], [], [], [], []]), bad_guesses  # solve it
 
 
 if __name__ == '__main__':
@@ -206,6 +207,6 @@ if __name__ == '__main__':
     c = main(sums)
     b = datetime.datetime.now()
     print('it took:', b - a)
-    print(counter)
+    print(bad_guesses)
     for i in range(9):
         print(c[i])

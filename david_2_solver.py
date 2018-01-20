@@ -7,82 +7,15 @@ For example if a square is 7 that means the square is one of [1, 2, 3]
 A possible combination of digits for a section is represented as the 1 bits in an integer.
 For example a combo of 7 that means the section contains [1, 2, 3]
 
+ToDo:
+    - each solver should track bad guesses and the bad guesses should be printed by the solver
+    - understand robert's code
+    - simplify my code (this should be allowed to make it slower)
+    - add better deductive logic
+    - each solver should return a solved board which is then checked.
+        This should be stored in a file along with the solve time.
 
-solve time history:
 
-initial solver time
-1.856   problem1
-
-fixed a bug
-1.027   problem1
-
-switched to bitwise sets
-0.131 problem1
-
-removed slow_consistency_checker from critical path
-0.0137 problem1
-
-prune some invalid combos
-0.0059 seconds to run
-152 add_value_calls
-23.2418 seconds to run
-289498 add_value_calls
-
-prune more invalid combos
-0.0054 seconds to run problem 1
-117 add_value_calls
-4 bad_guesses
-8.4603 seconds to run problem 2
-231125 add_value_calls
-76425 bad_guesses
-
-reset counters on problem start
-0.0051 seconds to run problem 1
-117 add_value_calls
-4 bad_guesses
-8.4074 seconds to run problem 2
-231008 add_value_calls
-76421 bad_guesses
-
-added extra constraint
-0.0196 seconds to run problem 1
-87 add_value_calls
-1 bad_guesses
-7.1403 seconds to run problem 2
-33377 add_value_calls
-6631 bad_guesses
-
-removed asserts
-0.0209 seconds to run problem 1
-87 add_value_calls
-1 bad_guesses
-6.6137 seconds to run problem 2
-31171 add_value_calls
-6631 bad_guesses
-
-removed call to union
-0.0145 seconds to run problem 1
-87 add_value_calls
-1 bad_guesses
-4.4375 seconds to run problem 2
-34710 add_value_calls
-6631 bad_guesses
-
-made ex union code execute less often
-0.0051 seconds to run problem 1
-102 add_value_calls
-2 bad_guesses
-2.1823 seconds to run problem 2
-53716 add_value_calls
-11169 bad_guesses
-
-changed search order
-0.0058 seconds to run problem 1
-106 add_value_calls
-2 bad_guesses
-0.4858 seconds to run problem 2
-11168 add_value_calls
-2536 bad_guesses
 """
 import doctest
 
@@ -322,40 +255,6 @@ def remove_possibilities(board, sections, loc, possibilities, recurse, ):
                         add_value(board, sections, loc2, digits_unaccounted_for)
 
 
-def extra_checks(board, sections, loc):
-    # check if this leaves a group of 9 where a number can only be in one location
-    for group in static_groups[loc]:
-        for loc2 in group:
-            # don't bother looking at squares that already known
-            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                found_digits = 0
-                for loc3 in group:
-                    if loc3 != loc2:
-                        found_digits = found_digits | board[loc3]
-                digits_unaccounted_for = 511 ^ found_digits
-                if digits_unaccounted_for:
-                    # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                    #    raise Contradiction
-                    add_value(board, sections, loc2, digits_unaccounted_for)
-
-
-def extra_checks2(board, sections):
-    # check if this leaves a group of 9 where a number can only be in one location
-    for group in rows + cols + boxes:
-        for loc2 in group:
-            # don't bother looking at squares that already known
-            if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                found_digits = 0
-                for loc3 in group:
-                    if loc3 != loc2:
-                        found_digits = found_digits | board[loc3]
-                digits_unaccounted_for = 511 ^ found_digits
-                if digits_unaccounted_for:
-                    # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                    #    raise Contradiction
-                    add_value(board, sections, loc2, digits_unaccounted_for)
-
-
 def solver(board, sections):
     global bad_guesses
     """This solves an arbitrary board by guessing solutions"""
@@ -403,7 +302,7 @@ def main(problem):
     board = init_board(sections)
     solved_board = solver(board, sections)
     # print_board(solved_board)
-    return solved_board
+    return solved_board, bad_guesses
 
 
 set_to_val = {1 << i: i+1 for i in range(9)}

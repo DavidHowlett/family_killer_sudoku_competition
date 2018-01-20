@@ -346,7 +346,7 @@ def extra_checks2(board, sections):
 
 
 def solver(board, sections):
-    # global bad_guesses
+    global bad_guesses
     """This solves an arbitrary board by guessing solutions"""
     # print_board(board)
     loc_to_guess = None
@@ -375,7 +375,7 @@ def solver(board, sections):
             return possible_board
         except Exception:
             # then that particular guess is wrong
-            # bad_guesses += 1
+            bad_guesses += 1
             pass
     # if there is a square on the current board which has no possible values
     # then there is a contradiction somewhere
@@ -385,15 +385,15 @@ def solver(board, sections):
 
 def main(problem):
     # global add_value_calls
-    # global bad_guesses
+    global bad_guesses
     # add_value_calls = 0
-    # bad_guesses = 0
+    bad_guesses = 0
     # problem = problem[-1:]
     sections = setup(problem)
     board = init_board(sections)
     solved_board = solver(board, sections)
     # print_board(solved_board)
-    return solved_board
+    return solved_board, bad_guesses
 
 
 set_to_val = {1 << i: i + 1 for i in range(9)}
@@ -411,7 +411,6 @@ assert val_to_set[3] == 4
 assert val_to_set[4] == 8
 
 # add_value_calls = 0
-# bad_guesses = 0
 rows = [{col + row * 9 for col in range(9)} for row in range(9)]
 cols = [{col + row * 9 for row in range(9)} for col in range(9)]
 boxes = [{col + row * 9 + box_col * 3 + box_row * 3 * 9 for row in range(3) for col in range(3)}
