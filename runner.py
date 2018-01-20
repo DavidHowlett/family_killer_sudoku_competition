@@ -2,12 +2,14 @@ from time import perf_counter as now
 import inspect
 import hashlib
 import problems
-import david_solver
+import david_1_solver
+import david_2_solver
 import robert_solver
 import michael_solver
 
 solvers = [
-    ('David', david_solver),
+    ('David 1', david_1_solver),
+    ('David 2', david_2_solver),
     ('Robert', robert_solver),
     ('Michael', michael_solver),
 ]
