@@ -109,13 +109,11 @@ def print_board(board):
 
 
 def add_value(board, sections, loc, single_possibility):
-    global add_value_calls
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function will change the given board and sections. It may raise a Contradiction. 
     Only call add_value on squares that don't have a value already.
     >>> import problems
-    >>> sections = setup(problems.problems['problem 1'])
-    >>> board = init_board(sections)
+    >>> board, sections = setup(problems.problems[0][1])
     >>> add_value(board, sections, 0, 256)
     >>> board[0]
     256
@@ -124,53 +122,44 @@ def add_value(board, sections, loc, single_possibility):
     >>> board[9] & 256
     0
     """
+    global add_value_calls
     assert 0 <= loc < 81
     assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
     assert single_possibility != board[loc]
     add_value_calls += 1
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
-
-    # if all the squares in a section are solved check that the section has the right total
-    section = sections[loc]
-    if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
-        if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
-            # assert False
-            raise Contradiction
-        # assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
-
     # we now know that the value in the current square can't be found in any of the neighbors
-    for loc2 in friends[loc]:
-        # only do the work to remove a value if the value is currently considered possible
-        if single_possibility & board[loc2]:
-            remove_possibilities(board, sections, loc2, single_possibility, True)
+    for rule in rule_memberships[loc]:
+        for loc2 in rule['locs']:
+            # only do the work to remove a value if the value is currently considered possible
+            if loc2 != loc and single_possibility & board[loc2]:
+                remove_possibilities(board, sections, loc2, single_possibility, True)
+        # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
 
 
-def remove_possibilities(board, sections, loc, possibilities, recurse, ):
+def remove_possibilities(board, rules, loc, possibilities, recurse, ):
     """This takes a board and removes a collection of possibilities from a single square."""
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
     new_possibilities = (~possibilities) & board[loc]
     if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
-        add_value(board, sections, loc, new_possibilities)
+        add_value(board, rules, loc, new_possibilities)
     else:
         board[loc] = new_possibilities
     if board[loc] == 0:
         raise Contradiction
-
-    # exclude combo possibilities that become impossible
-    section = sections[loc]
-    new_combos = [combo for combo in section['combos'] if board[loc] & combo]
-    if new_combos != section['combos']:
-        # use the new combos to reduce the possibilities in a section
-        section['combos'] = new_combos
-        for loc2 in section['locs']:
-            remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
+    for rule in rule_memberships[loc]:
+        new_combos = [combo for combo in rule['combos'] if combo & board[loc]]
+        if not new_combos:
+            raise Contradiction
+        rule['combos'] = new_combos
 
 
-def solver(board, sections):
+def solver(board, rules):
     global bad_guesses
+    print_board(board)
     """This solves an arbitrary board using deduction and when that fails, guessing solutions"""
     # check if this leaves a group of 9 where a number can only be in one location
     # this is computationally expensive because I need to find a large number of unions
@@ -179,6 +168,7 @@ def solver(board, sections):
     while progress_made:
         progress_made = False
 
+        '''
         for group in static_groups:
             for loc in group:
                 # don't bother looking at squares that already known
@@ -195,7 +185,7 @@ def solver(board, sections):
                             raise Contradiction
                         add_value(board, sections, loc, digits_unaccounted_for)
                         progress_made = True
-
+        '''
         """
         for rule in rules:
             if rule[2]:
@@ -209,6 +199,25 @@ def solver(board, sections):
                     
                     
         """
+        '''
+        # exclude combo possibilities that become impossible
+        section = rules[loc] # todo wrong
+        new_combos = [combo for combo in section['combos'] if board[loc] & combo]
+        if new_combos != section['combos']:
+            # use the new combos to reduce the possibilities in a section
+            section['combos'] = new_combos
+            for loc2 in section['locs']:
+                remove_possibilities(board, rules, loc2, ~union(section['combos']), True)
+        '''
+        '''
+        # if all the squares in a section are solved check that the section has the right total
+        section = sections[loc]
+        if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
+            if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
+                # assert False
+                raise Contradiction
+            # assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
+        '''
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -223,14 +232,18 @@ def solver(board, sections):
     if loc_to_guess is None:
         # then the board is solved :-)
         return board
-    for possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+    for possibility in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
         if not possibility & board[loc_to_guess]:
             continue
         possible_board = board[:]
-        possible_sections = [s.copy() for s in sections]
+        possible_rules = []
+        for rule in rules:
+            rule = rule.copy()
+            rule['combos'] = rule['combos'].copy()
+            possible_rules.append(rule)
         try:
-            add_value(possible_board, possible_sections, loc_to_guess, possibility)
-            return solver(possible_board, possible_sections)
+            add_value(possible_board, possible_rules, loc_to_guess, possibility)
+            return solver(possible_board, possible_rules)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
@@ -241,32 +254,37 @@ def solver(board, sections):
     raise Contradiction
 
 
-def main(problem):
+def setup(problem):
+    """
+    >>> import problems
+    >>> board, sections = setup(problems.problems[32][1])
+    """
     global add_value_calls
     global bad_guesses
-    global friends
+    global rule_memberships
     add_value_calls = 0
     bad_guesses = 0
-    initial_sections = [{
-            'total': total,
-            'locs': {x + y * 9 for x, y in section},
-            'combos': combos[len(section)][total]}
-        for total, section in problem]
-    sections = [None for _ in range(81)]
-    for section in initial_sections:
-        for loc in section['locs']:
-            sections[loc] = section
-    groups = rows + cols + boxes + [section['locs'] for section in initial_sections]
+    # convert the problem specific rules to my format
+    rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
+             for total, section in problem]
+    # convert the static rules to my format
+    rules += [{'locs': locs, 'combos': {511}, 'to process': True}
+              for locs in rows + cols + boxes]
     # I need to know which groups each square is a member of
-    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
-    # friends of a location are the locations that share a row, column or box
-    friends = [set.union(*group_memberships[loc]).difference({loc}) for loc in range(81)]
-    board = [0b111_111_111 for _ in range(81)]
-    for section in sections:
-        possible_values = union(section['combos'])
-        for loc in section['locs']:
-            board[loc] = possible_values
-    solved_board = solver(board, sections)
+    rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
+    assert len(rule_memberships[0]) == 4
+    board = [511]*81
+    for rule in rules:
+        possible_values = union(rule['combos'])
+        for loc in rule['locs']:
+            board[loc] &= possible_values
+    return board, rules
+
+
+def main(problem):
+    """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
+    board, rules = setup(problem)
+    solved_board = solver(board, rules)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
@@ -286,12 +304,11 @@ assert val_to_set[4] == 8
 
 add_value_calls = 0
 bad_guesses = 0
-friends = []
+rule_memberships = []
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
-static_groups = boxes+rows+cols  # todo remove this variable
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
@@ -306,4 +323,4 @@ assert combos[2][5] == [6, 9]
 if __name__ == '__main__':
     doctest.testmod()
     import problems
-    print(main(problems.problems['problem 2']))
+    print(main(problems.problems[32][1]))

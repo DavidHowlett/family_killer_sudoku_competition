@@ -11,7 +11,7 @@ solvers = [
     ('Robert', robert_solver),
     ('Michael', michael_solver),
     ('David 1', david_1_solver),
-    ('David 2', david_2_solver),
+    # ('David 2', david_2_solver),
 ]
 
 solutions = dict()
@@ -36,6 +36,7 @@ if __name__ == '__main__':
                 result, bad_guesses = solver.main(problem)
                 run_time = time.process_time()-start_time
                 open(file_name, 'w').write(f'{run_time}\n{bad_guesses}\n{result}')
+            # print(result)
             solver.total_time_taken += run_time
             solver.total_bad_guesses += bad_guesses
             # if the correct answer is not known yet, record the current solution as being correct
