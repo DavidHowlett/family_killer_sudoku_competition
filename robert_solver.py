@@ -49,7 +49,7 @@ def init_problem(problem):
 
     # Convert from dual index to single index
     for index, rule in enumerate(problem):
-        problem[index] = (rule[0], {row*9+col for row, col in rule[1]})
+        problem[index] = (rule[0], {row*9+col for col, row in rule[1]})
 
     return problem
 
@@ -87,7 +87,7 @@ def main(problem):
     # Generate initial set of cells
     cells = [{i+1 for i in range(9)} for _ in range(9 ** 2)]
 
-    return core(cells, rules), bad_guesses
+    return [next(iter(square)) for square in core(cells, rules)], bad_guesses
 
 
 def core(cells, rules):

@@ -190,6 +190,8 @@ def main(problem):
     bad_guesses = 0
     problem = copy.deepcopy(problem)
     for i in problem:
+        for j in i[1]:
+            j[0], j[1] = j[1], j[0]
         i[0], i[1] = i[1], i[0]
     sum2 = sum3()  # sum2[x][y] = all the numbers that cant sum to y in x numbers
     supo = []
@@ -198,8 +200,10 @@ def main(problem):
         for col in range(9):
             d.append([1, 2, 3, 4, 5, 6, 7, 8, 9])
         supo.append(d)  # gets supo to have every number 1:9 as options in every square
-    return solve(supo, problem, sum2, [[], [], [], [], [], [], [], [], []], [[], [], [], [], [], [], [], [], []],
-          [[], [], [], [], [], [], [], [], []]), bad_guesses  # solve it
+    solution = solve(
+        supo, problem, sum2, [[], [], [], [], [], [], [], [], []], [[], [], [], [], [], [], [], [], []],
+        [[], [], [], [], [], [], [], [], []])
+    return sum(solution, []), bad_guesses  # solve it
 
 
 if __name__ == '__main__':

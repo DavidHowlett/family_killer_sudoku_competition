@@ -9,9 +9,11 @@ For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
     - the solutions of each of the solvers should be checked against each other
+    - understand robert's code
+    - unify on a single representation of the rules
+
     - simplify the unit tests (it is okay to have shared imports and setup)
     - cover the solver and main with unit tests
-    - understand robert's code
     - simplify my code (this should be allowed to make it slower)
     - add better deductive logic
 
@@ -42,7 +44,7 @@ def union(xs):
 
 def pop_count(x):
     """This finds the number of 1's in the binary representation of a number
-    Todo replace this with gmpy.popcount(a)
+    If this is a bottleneck it should be replaced this with gmpy.popcount(a)
     >>> pop_count(0)
     0
     >>> pop_count(1)
@@ -254,6 +256,19 @@ def solver(board, sections):
                             raise Contradiction
                         add_value(board, sections, loc, digits_unaccounted_for)
                         progress_made = True
+        """
+        for rule in rules:
+            if rule[2]:
+                for subset in rule:
+                    possibilities = union(subset)
+                    number_of_possibilities = popcount(possibilities)
+                    if number_of_possibilities < len(subset):
+                        raise Contradiction
+                    elif number_of_possibilities == len(subset):
+                        # then I can exclude lots of possibilities from the others locations in the rule
+                    
+                    
+        """
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -287,12 +302,6 @@ def solver(board, sections):
 
 
 def main(problem):
-    """
-    >>> # import problems # todo
-    >>> # main(problems.problems['problem 2'])
-    :param problem:
-    :return:
-    """
     global add_value_calls
     global bad_guesses
     add_value_calls = 0
@@ -300,7 +309,7 @@ def main(problem):
     sections = setup(problem)
     board = init_board(sections)
     solved_board = solver(board, sections)
-    return solved_board, bad_guesses
+    return [set_to_val[square] for square in solved_board], bad_guesses
 
 
 set_to_val = {1 << i: i+1 for i in range(9)}

@@ -8,11 +8,13 @@ import robert_solver
 import michael_solver
 
 solvers = [
-    ('David 1', david_1_solver),
-    ('David 2', david_2_solver),
     ('Robert', robert_solver),
     ('Michael', michael_solver),
+    ('David 1', david_1_solver),
+    ('David 2', david_2_solver),
 ]
+
+solutions = dict()
 
 if __name__ == '__main__':
     for author, solver in solvers:
@@ -21,8 +23,8 @@ if __name__ == '__main__':
         # this line makes things the same on windows and unix
         normalised_source = '\n'.join(inspect.getsource(solver).split())
         source_hash = hashlib.sha256(normalised_source.encode()).hexdigest()
-        for problem_name, problem in problems.problems.items():
-            file_name = f'results cache/{source_hash} {problem_name}.txt'
+        for problem_name, problem in problems.problems:
+            file_name = f'results cache/{problem_name} by {author} {source_hash}.txt'
             try:
                 file = open(file_name)
                 run_time = float(file.readline())
@@ -36,9 +38,16 @@ if __name__ == '__main__':
                 open(file_name, 'w').write(f'{run_time}\n{bad_guesses}\n{result}')
             solver.total_time_taken += run_time
             solver.total_bad_guesses += bad_guesses
-            print(f'{author} took {run_time:.4f} seconds and {bad_guesses} bad guesses to run {problem_name}')
+            # if the correct answer is not known yet, record the current solution as being correct
+            if problem_name not in solutions:
+                solutions[problem_name] = result
+            if result == solutions[problem_name]:
+                print(f'{author} took {run_time:.4f} seconds and {bad_guesses} bad guesses to run {problem_name}')
+            else:
+                print(f'ERROR on {problem_name} by {author}')
             # print(result)
 
+    print()
     for author, solver in solvers:
         print(f'{author} took a total of {solver.total_time_taken:.3f} seconds '
               f'and {solver.total_bad_guesses} bad guesses. Each bad guess took '

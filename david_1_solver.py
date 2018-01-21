@@ -393,7 +393,7 @@ def main(problem):
     board = init_board(sections)
     solved_board = solver(board, sections)
     # print_board(solved_board)
-    return solved_board, bad_guesses
+    return [set_to_val[square] for square in solved_board], bad_guesses
 
 
 set_to_val = {1 << i: i + 1 for i in range(9)}
