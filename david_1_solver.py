@@ -87,6 +87,7 @@ changed search order
 
 
 # import doctest
+bad_guesses = 0
 
 
 class Contradiction(Exception):
@@ -371,8 +372,7 @@ def solver(board, sections):
             possible_board = board[:]
             possible_sections = [s.copy() for s in sections]
             add_value(possible_board, possible_sections, loc_to_guess, possibility)
-            solver(possible_board, possible_sections)
-            return possible_board
+            return solver(possible_board, possible_sections)
         except Exception:
             # then that particular guess is wrong
             bad_guesses += 1

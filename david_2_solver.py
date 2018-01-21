@@ -8,14 +8,17 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - each solver should track bad guesses and the bad guesses should be printed by the solver
+    - the solutions of each of the solvers should be checked against each other
+    - simplify the unit tests (it is okay to have shared imports and setup)
+    - cover the solver and main with unit tests
     - understand robert's code
     - simplify my code (this should be allowed to make it slower)
     - add better deductive logic
-    - each solver should return a solved board which is then checked.
-        This should be stored in a file along with the solve time.
 
 
+David 2 took a total of 32.328 seconds and 146381 bad guesses. Each bad guess took 0.221 milliseconds on average
+moved the location of the search for the missing digit
+David 2 took a total of 27.883 seconds and 88999 bad guesses. Each bad guess took 0.313 milliseconds on average
 """
 import doctest
 
@@ -115,7 +118,6 @@ def init_board(sections):
         possible_values = union(section['combos'])
         for loc in section['locs']:
             board[loc] = possible_values
-    # todo more values can be excluded in particular straight sections exclude values from their row
     return board
 
 
@@ -157,18 +159,6 @@ def print_board(board):
     print(to_print)
 
 
-def slow_consistency_check(board, sections):
-    """This does a bunch of sanity checks, this should not be left in the final solver"""
-    for square in board:
-        assert square
-    for group in groups:
-        assert section_sum(union(board[loc] for loc in group)) >= len(group)
-    for section in sections:
-        # if all the squares in a section are solved check that the section has the right total
-        if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):
-            assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
-
-
 def add_value(board, sections, loc, single_possibility):
     global add_value_calls
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
@@ -186,8 +176,8 @@ def add_value(board, sections, loc, single_possibility):
     0
     """
     assert 0 <= loc < 81
-    # assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
-    # assert single_possibility != board[loc]
+    assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
+    assert single_possibility != board[loc]
     add_value_calls += 1
     # set the current square
     remove_possibilities(board, sections, loc, ~single_possibility, False)
@@ -237,28 +227,33 @@ def remove_possibilities(board, sections, loc, possibilities, recurse, ):
         section['combos'] = new_combos
         for loc2 in section['locs']:
             remove_possibilities(board, sections, loc2, ~union(section['combos']), True)
-    
-    if not recurse:
-        # check if this leaves a group of 9 where a number can only be in one location
-        for group in static_groups[loc]:
-            for loc2 in group:
-                # don't bother looking at squares that already known
-                if board[loc2] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                    found_digits = 0
-                    for loc3 in group:
-                        if loc3 != loc2:
-                            found_digits = found_digits | board[loc3]
-                    digits_unaccounted_for = 511 ^ found_digits
-                    if digits_unaccounted_for:
-                        # if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                        #    raise Contradiction
-                        add_value(board, sections, loc2, digits_unaccounted_for)
 
 
 def solver(board, sections):
     global bad_guesses
-    """This solves an arbitrary board by guessing solutions"""
+    """This solves an arbitrary board using deduction and when that fails, guessing solutions"""
+    # check if this leaves a group of 9 where a number can only be in one location
+    # this is computationally expensive because I need to find a large number of unions
     # print_board(board)
+    progress_made = True
+    while progress_made:
+        progress_made = False
+        for group in static_groups:
+            for loc in group:
+                # don't bother looking at squares that already known
+                if board[loc] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    found_digits = 0
+                    for loc2 in group:
+                        if loc2 != loc:
+                            found_digits = found_digits | board[loc2]
+                    digits_unaccounted_for = 511 ^ found_digits
+                    if digits_unaccounted_for:
+                        if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                            raise Contradiction
+                        if not digits_unaccounted_for & board[loc]:
+                            raise Contradiction
+                        add_value(board, sections, loc, digits_unaccounted_for)
+                        progress_made = True
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -280,8 +275,7 @@ def solver(board, sections):
         possible_sections = [s.copy() for s in sections]
         try:
             add_value(possible_board, possible_sections, loc_to_guess, possibility)
-            solver(possible_board, possible_sections)
-            return possible_board
+            return solver(possible_board, possible_sections)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
@@ -293,15 +287,19 @@ def solver(board, sections):
 
 
 def main(problem):
+    """
+    >>> # import problems # todo
+    >>> # main(problems.problems['problem 2'])
+    :param problem:
+    :return:
+    """
     global add_value_calls
     global bad_guesses
     add_value_calls = 0
     bad_guesses = 0
-    # problem = problem[-1:]
     sections = setup(problem)
     board = init_board(sections)
     solved_board = solver(board, sections)
-    # print_board(solved_board)
     return solved_board, bad_guesses
 
 
@@ -325,7 +323,7 @@ rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
-static_groups = [[group for group in rows + cols + boxes if loc in group] for loc in range(81)]
+static_groups = boxes+rows+cols
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
@@ -336,4 +334,8 @@ combos = [[[possible_section for possible_section in combos
 assert combos[2][3] == [3]
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
 assert combos[2][5] == [6, 9]
-doctest.testmod()
+
+if __name__ == '__main__':
+    doctest.testmod()
+    import problems
+    print(main(problems.problems['problem 2']))

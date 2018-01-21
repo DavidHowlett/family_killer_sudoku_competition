@@ -1,4 +1,4 @@
-from time import perf_counter as now
+import time
 import inspect
 import hashlib
 import problems
@@ -18,26 +18,26 @@ if __name__ == '__main__':
     for author, solver in solvers:
         solver.total_time_taken = 0
         solver.total_bad_guesses = 0
+        # this line makes things the same on windows and unix
+        normalised_source = '\n'.join(inspect.getsource(solver).split())
+        source_hash = hashlib.sha256(normalised_source.encode()).hexdigest()
         for problem_name, problem in problems.problems.items():
-            # this line makes things the same on windows and unix
-            normalised_source = '\n'.join(inspect.getsource(solver).split())
-            hash = hashlib.sha256(normalised_source.encode()).hexdigest()
-            file_name = f'results cache/{hash} {problem_name}.txt'
+            file_name = f'results cache/{source_hash} {problem_name}.txt'
             try:
                 file = open(file_name)
                 run_time = float(file.readline())
                 bad_guesses = int(file.readline())
+                result = eval(file.readline())
             except (FileNotFoundError, ValueError):
                 # in the event that the lookup fails actually run the test
-                start_time = now()
+                start_time = time.process_time()
                 result, bad_guesses = solver.main(problem)
-                run_time = now()-start_time
+                run_time = time.process_time()-start_time
                 open(file_name, 'w').write(f'{run_time}\n{bad_guesses}\n{result}')
             solver.total_time_taken += run_time
             solver.total_bad_guesses += bad_guesses
             print(f'{author} took {run_time:.4f} seconds and {bad_guesses} bad guesses to run {problem_name}')
-            # print(david_solver.add_value_calls, 'add_value_calls')
-            # print(david_solver.bad_guesses, 'bad_guesses')
+            # print(result)
 
     for author, solver in solvers:
         print(f'{author} took a total of {solver.total_time_taken:.3f} seconds '
