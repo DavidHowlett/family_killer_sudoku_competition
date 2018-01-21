@@ -197,5 +197,5 @@ def core(cells, rules):
 
 if __name__ == '__main__':
     ct = time.time()
-    main(problems.problems["problem 2"])
+    main(problems.problems[-1][1])
     print(time.time()-ct)
