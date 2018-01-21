@@ -1,150 +1,197 @@
-/Users/David/anaconda/bin/python3.6 /Users/David/Code/family_killer_sudoku_competition/runner.py
-David took 0.0055 seconds to run problem 1
-David took 0.0086 seconds to run problem 1 rotated
-David took 0.0034 seconds to run problem 1 inverted
-David took 0.0042 seconds to run problem 1 rotated inverted
-David took 0.0082 seconds to run problem 1 reflected
-David took 0.0120 seconds to run problem 1 rotated reflected
-David took 0.0044 seconds to run problem 1 inverted reflected
-David took 0.0057 seconds to run problem 1 rotated inverted reflected
-David took 0.0166 seconds to run problem 1 flipped
-David took 0.0128 seconds to run problem 1 rotated flipped
-David took 0.0041 seconds to run problem 1 inverted flipped
-David took 0.0035 seconds to run problem 1 rotated inverted flipped
-David took 0.0133 seconds to run problem 1 reflected flipped
-David took 0.0094 seconds to run problem 1 rotated reflected flipped
-David took 0.0045 seconds to run problem 1 inverted reflected flipped
-David took 0.0096 seconds to run problem 1 rotated inverted reflected flipped
-David took 2.1481 seconds to run problem 2
-David took 0.8975 seconds to run problem 2 rotated
-David took 1.9390 seconds to run problem 2 inverted
-David took 1.2656 seconds to run problem 2 rotated inverted
-David took 0.4567 seconds to run problem 2 reflected
-David took 1.7853 seconds to run problem 2 rotated reflected
-David took 2.2770 seconds to run problem 2 inverted reflected
-David took 2.4096 seconds to run problem 2 rotated inverted reflected
-David took 0.6903 seconds to run problem 2 flipped
-David took 2.2923 seconds to run problem 2 rotated flipped
-David took 1.6060 seconds to run problem 2 inverted flipped
-David took 1.1705 seconds to run problem 2 rotated inverted flipped
-David took 2.4308 seconds to run problem 2 reflected flipped
-David took 1.8390 seconds to run problem 2 rotated reflected flipped
-David took 2.2059 seconds to run problem 2 inverted reflected flipped
-David took 0.1488 seconds to run problem 2 rotated inverted reflected flipped
-David took 0.0251 seconds to run Grandad slow problem
-David took 0.1411 seconds to run Grandad slow problem rotated
-David took 0.2066 seconds to run Grandad slow problem inverted
-David took 0.0379 seconds to run Grandad slow problem rotated inverted
-David took 0.0830 seconds to run Grandad slow problem reflected
-David took 0.6954 seconds to run Grandad slow problem rotated reflected
-David took 0.0833 seconds to run Grandad slow problem inverted reflected
-David took 0.0552 seconds to run Grandad slow problem rotated inverted reflected
-David took 0.1829 seconds to run Grandad slow problem flipped
-David took 0.2321 seconds to run Grandad slow problem rotated flipped
-David took 0.1158 seconds to run Grandad slow problem inverted flipped
-David took 0.0683 seconds to run Grandad slow problem rotated inverted flipped
-David took 0.4455 seconds to run Grandad slow problem reflected flipped
-David took 0.0257 seconds to run Grandad slow problem rotated reflected flipped
-David took 0.1904 seconds to run Grandad slow problem inverted reflected flipped
-David took 0.1478 seconds to run Grandad slow problem rotated inverted reflected flipped
-Robert took 0.0500 seconds to run problem 1
-Robert took 0.0284 seconds to run problem 1 rotated
-Robert took 0.0154 seconds to run problem 1 inverted
-Robert took 0.0244 seconds to run problem 1 rotated inverted
-Robert took 0.0158 seconds to run problem 1 reflected
-Robert took 0.0144 seconds to run problem 1 rotated reflected
-Robert took 0.0109 seconds to run problem 1 inverted reflected
-Robert took 0.0140 seconds to run problem 1 rotated inverted reflected
-Robert took 0.0110 seconds to run problem 1 flipped
-Robert took 0.0107 seconds to run problem 1 rotated flipped
-Robert took 0.0110 seconds to run problem 1 inverted flipped
-Robert took 0.0099 seconds to run problem 1 rotated inverted flipped
-Robert took 0.0105 seconds to run problem 1 reflected flipped
-Robert took 0.0107 seconds to run problem 1 rotated reflected flipped
-Robert took 0.0109 seconds to run problem 1 inverted reflected flipped
-Robert took 0.0106 seconds to run problem 1 rotated inverted reflected flipped
-Robert took 0.6232 seconds to run problem 2
-Robert took 0.4966 seconds to run problem 2 rotated
-Robert took 0.7011 seconds to run problem 2 inverted
-Robert took 0.2014 seconds to run problem 2 rotated inverted
-Robert took 0.3840 seconds to run problem 2 reflected
-Robert took 0.3881 seconds to run problem 2 rotated reflected
-Robert took 0.4180 seconds to run problem 2 inverted reflected
-Robert took 0.5331 seconds to run problem 2 rotated inverted reflected
-Robert took 0.1314 seconds to run problem 2 flipped
-Robert took 0.2845 seconds to run problem 2 rotated flipped
-Robert took 0.3814 seconds to run problem 2 inverted flipped
-Robert took 0.5495 seconds to run problem 2 rotated inverted flipped
-Robert took 0.7101 seconds to run problem 2 reflected flipped
-Robert took 0.1902 seconds to run problem 2 rotated reflected flipped
-Robert took 0.3527 seconds to run problem 2 inverted reflected flipped
-Robert took 0.1222 seconds to run problem 2 rotated inverted reflected flipped
-Robert took 0.0300 seconds to run Grandad slow problem
-Robert took 0.0187 seconds to run Grandad slow problem rotated
-Robert took 0.3282 seconds to run Grandad slow problem inverted
-Robert took 0.0712 seconds to run Grandad slow problem rotated inverted
-Robert took 0.0316 seconds to run Grandad slow problem reflected
-Robert took 0.0725 seconds to run Grandad slow problem rotated reflected
-Robert took 0.0208 seconds to run Grandad slow problem inverted reflected
-Robert took 0.0249 seconds to run Grandad slow problem rotated inverted reflected
-Robert took 0.0232 seconds to run Grandad slow problem flipped
-Robert took 0.0412 seconds to run Grandad slow problem rotated flipped
-Robert took 0.1219 seconds to run Grandad slow problem inverted flipped
-Robert took 0.0552 seconds to run Grandad slow problem rotated inverted flipped
-Robert took 0.0703 seconds to run Grandad slow problem reflected flipped
-Robert took 0.0768 seconds to run Grandad slow problem rotated reflected flipped
-Robert took 0.0296 seconds to run Grandad slow problem inverted reflected flipped
-Robert took 0.0440 seconds to run Grandad slow problem rotated inverted reflected flipped
-Michael took 0.0639 seconds to run problem 1
-Michael took 0.1279 seconds to run problem 1 rotated
-Michael took 0.2675 seconds to run problem 1 inverted
-Michael took 0.1756 seconds to run problem 1 rotated inverted
-Michael took 0.1704 seconds to run problem 1 reflected
-Michael took 0.0903 seconds to run problem 1 rotated reflected
-Michael took 0.1057 seconds to run problem 1 inverted reflected
-Michael took 0.0453 seconds to run problem 1 rotated inverted reflected
-Michael took 0.2008 seconds to run problem 1 flipped
-Michael took 0.1416 seconds to run problem 1 rotated flipped
-Michael took 0.1450 seconds to run problem 1 inverted flipped
-Michael took 0.1281 seconds to run problem 1 rotated inverted flipped
-Michael took 0.1895 seconds to run problem 1 reflected flipped
-Michael took 0.1737 seconds to run problem 1 rotated reflected flipped
-Michael took 0.0696 seconds to run problem 1 inverted reflected flipped
-Michael took 0.2283 seconds to run problem 1 rotated inverted reflected flipped
-Michael took 0.0000 seconds to run problem 2
-Michael took 0.0000 seconds to run problem 2 rotated
-Michael took 0.0000 seconds to run problem 2 inverted
-Michael took 0.0000 seconds to run problem 2 rotated inverted
-Michael took 0.0000 seconds to run problem 2 reflected
-Michael took 0.0000 seconds to run problem 2 rotated reflected
-Michael took 0.0000 seconds to run problem 2 inverted reflected
-Michael took 0.0000 seconds to run problem 2 rotated inverted reflected
-Michael took 0.0000 seconds to run problem 2 flipped
-Michael took 0.0000 seconds to run problem 2 rotated flipped
-Michael took 0.0000 seconds to run problem 2 inverted flipped
-Michael took 0.0000 seconds to run problem 2 rotated inverted flipped
-Michael took 0.0000 seconds to run problem 2 reflected flipped
-Michael took 0.0000 seconds to run problem 2 rotated reflected flipped
-Michael took 0.0000 seconds to run problem 2 inverted reflected flipped
-Michael took 0.0000 seconds to run problem 2 rotated inverted reflected flipped
-Michael took 1.0776 seconds to run Grandad slow problem
-Michael took 0.6445 seconds to run Grandad slow problem rotated
-Michael took 3.6586 seconds to run Grandad slow problem inverted
-Michael took 3.2303 seconds to run Grandad slow problem rotated inverted
-Michael took 0.9726 seconds to run Grandad slow problem reflected
-Michael took 3.6715 seconds to run Grandad slow problem rotated reflected
-Michael took 0.5256 seconds to run Grandad slow problem inverted reflected
-Michael took 0.5921 seconds to run Grandad slow problem rotated inverted reflected
-Michael took 0.8425 seconds to run Grandad slow problem flipped
-Michael took 2.1372 seconds to run Grandad slow problem rotated flipped
-Michael took 0.4505 seconds to run Grandad slow problem inverted flipped
-Michael took 2.1128 seconds to run Grandad slow problem rotated inverted flipped
-Michael took 2.4269 seconds to run Grandad slow problem reflected flipped
-Michael took 2.3693 seconds to run Grandad slow problem rotated reflected flipped
-Michael took 1.4984 seconds to run Grandad slow problem inverted reflected flipped
-Michael took 1.6634 seconds to run Grandad slow problem rotated inverted reflected flipped
-David total time: 28.42408605798846
-Robert total time: 7.786005126981763
-Micheal total time: 30.19725162803661
+Robert took 0.0123 seconds and 0 bad guesses to run problem 1
+Robert took 0.0105 seconds and 0 bad guesses to run problem 1 rotated
+Robert took 0.0101 seconds and 0 bad guesses to run problem 1 inverted
+Robert took 0.0104 seconds and 0 bad guesses to run problem 1 rotated inverted
+Robert took 0.0117 seconds and 0 bad guesses to run problem 1 reflected
+Robert took 0.0103 seconds and 0 bad guesses to run problem 1 rotated reflected
+Robert took 0.0101 seconds and 0 bad guesses to run problem 1 inverted reflected
+Robert took 0.0102 seconds and 0 bad guesses to run problem 1 rotated inverted reflected
+Robert took 0.0105 seconds and 0 bad guesses to run problem 1 flipped
+Robert took 0.0099 seconds and 0 bad guesses to run problem 1 rotated flipped
+Robert took 0.0103 seconds and 0 bad guesses to run problem 1 inverted flipped
+Robert took 0.0101 seconds and 0 bad guesses to run problem 1 rotated inverted flipped
+Robert took 0.0110 seconds and 0 bad guesses to run problem 1 reflected flipped
+Robert took 0.0101 seconds and 0 bad guesses to run problem 1 rotated reflected flipped
+Robert took 0.0111 seconds and 0 bad guesses to run problem 1 inverted reflected flipped
+Robert took 0.0103 seconds and 0 bad guesses to run problem 1 rotated inverted reflected flipped
+Robert took 0.0238 seconds and 1 bad guesses to run grandad slow problem
+Robert took 0.0268 seconds and 1 bad guesses to run grandad slow problem rotated
+Robert took 0.0824 seconds and 25 bad guesses to run grandad slow problem inverted
+Robert took 0.0242 seconds and 0 bad guesses to run grandad slow problem rotated inverted
+Robert took 0.0209 seconds and 0 bad guesses to run grandad slow problem reflected
+Robert took 0.3474 seconds and 206 bad guesses to run grandad slow problem rotated reflected
+Robert took 0.0843 seconds and 29 bad guesses to run grandad slow problem inverted reflected
+Robert took 0.0327 seconds and 4 bad guesses to run grandad slow problem rotated inverted reflected
+Robert took 0.0452 seconds and 8 bad guesses to run grandad slow problem flipped
+Robert took 0.0792 seconds and 32 bad guesses to run grandad slow problem rotated flipped
+Robert took 0.0808 seconds and 27 bad guesses to run grandad slow problem inverted flipped
+Robert took 0.0289 seconds and 3 bad guesses to run grandad slow problem rotated inverted flipped
+Robert took 0.0432 seconds and 10 bad guesses to run grandad slow problem reflected flipped
+Robert took 0.1218 seconds and 53 bad guesses to run grandad slow problem rotated reflected flipped
+Robert took 0.0600 seconds and 17 bad guesses to run grandad slow problem inverted reflected flipped
+Robert took 0.0252 seconds and 1 bad guesses to run grandad slow problem rotated inverted reflected flipped
+Robert took 0.5755 seconds and 307 bad guesses to run problem 2
+Robert took 0.4061 seconds and 220 bad guesses to run problem 2 rotated
+Robert took 0.4053 seconds and 266 bad guesses to run problem 2 inverted
+Robert took 0.4481 seconds and 285 bad guesses to run problem 2 rotated inverted
+Robert took 0.5155 seconds and 277 bad guesses to run problem 2 reflected
+Robert took 0.7491 seconds and 445 bad guesses to run problem 2 rotated reflected
+Robert took 0.2140 seconds and 101 bad guesses to run problem 2 inverted reflected
+Robert took 0.5911 seconds and 377 bad guesses to run problem 2 rotated inverted reflected
+Robert took 0.1319 seconds and 68 bad guesses to run problem 2 flipped
+Robert took 0.7717 seconds and 437 bad guesses to run problem 2 rotated flipped
+Robert took 0.2015 seconds and 111 bad guesses to run problem 2 inverted flipped
+Robert took 0.3659 seconds and 233 bad guesses to run problem 2 rotated inverted flipped
+Robert took 0.3095 seconds and 147 bad guesses to run problem 2 reflected flipped
+Robert took 0.4170 seconds and 242 bad guesses to run problem 2 rotated reflected flipped
+Robert took 0.6276 seconds and 356 bad guesses to run problem 2 inverted reflected flipped
+Robert took 0.1507 seconds and 82 bad guesses to run problem 2 rotated inverted reflected flipped
+Michael took 0.0519 seconds and 6 bad guesses to run problem 1
+Michael took 0.1318 seconds and 50 bad guesses to run problem 1 rotated
+Michael took 0.0820 seconds and 24 bad guesses to run problem 1 inverted
+Michael took 0.0991 seconds and 37 bad guesses to run problem 1 rotated inverted
+Michael took 0.1326 seconds and 52 bad guesses to run problem 1 reflected
+Michael took 0.2086 seconds and 88 bad guesses to run problem 1 rotated reflected
+Michael took 0.1190 seconds and 49 bad guesses to run problem 1 inverted reflected
+Michael took 0.0664 seconds and 14 bad guesses to run problem 1 rotated inverted reflected
+Michael took 0.2100 seconds and 88 bad guesses to run problem 1 flipped
+Michael took 0.1898 seconds and 73 bad guesses to run problem 1 rotated flipped
+Michael took 0.1817 seconds and 89 bad guesses to run problem 1 inverted flipped
+Michael took 0.0652 seconds and 20 bad guesses to run problem 1 rotated inverted flipped
+Michael took 0.1285 seconds and 44 bad guesses to run problem 1 reflected flipped
+Michael took 0.1514 seconds and 53 bad guesses to run problem 1 rotated reflected flipped
+Michael took 0.1186 seconds and 56 bad guesses to run problem 1 inverted reflected flipped
+Michael took 0.2027 seconds and 83 bad guesses to run problem 1 rotated inverted reflected flipped
+Michael took 0.6117 seconds and 347 bad guesses to run grandad slow problem
+Michael took 1.0026 seconds and 755 bad guesses to run grandad slow problem rotated
+Michael took 3.6290 seconds and 2393 bad guesses to run grandad slow problem inverted
+Michael took 0.5474 seconds and 265 bad guesses to run grandad slow problem rotated inverted
+Michael took 0.6600 seconds and 461 bad guesses to run grandad slow problem reflected
+Michael took 3.6501 seconds and 2365 bad guesses to run grandad slow problem rotated reflected
+Michael took 3.2478 seconds and 2185 bad guesses to run grandad slow problem inverted reflected
+Michael took 1.0674 seconds and 576 bad guesses to run grandad slow problem rotated inverted reflected
+Michael took 1.5197 seconds and 947 bad guesses to run grandad slow problem flipped
+Michael took 2.3981 seconds and 1523 bad guesses to run grandad slow problem rotated flipped
+Michael took 1.8223 seconds and 1083 bad guesses to run grandad slow problem inverted flipped
+Michael took 1.4157 seconds and 807 bad guesses to run grandad slow problem rotated inverted flipped
+Michael took 2.1425 seconds and 1589 bad guesses to run grandad slow problem reflected flipped
+Michael took 0.4776 seconds and 256 bad guesses to run grandad slow problem rotated reflected flipped
+Michael took 2.2512 seconds and 1315 bad guesses to run grandad slow problem inverted reflected flipped
+Michael took 0.8773 seconds and 464 bad guesses to run grandad slow problem rotated inverted reflected flipped
+Michael took 205.8727 seconds and 158781 bad guesses to run problem 2
+Michael took 25.0955 seconds and 17284 bad guesses to run problem 2 rotated
+Michael took 68.2450 seconds and 50659 bad guesses to run problem 2 inverted
+Michael took 124.3064 seconds and 104795 bad guesses to run problem 2 rotated inverted
+Michael took 59.4249 seconds and 47500 bad guesses to run problem 2 reflected
+Michael took 58.1891 seconds and 45597 bad guesses to run problem 2 rotated reflected
+Michael took 57.7358 seconds and 45830 bad guesses to run problem 2 inverted reflected
+Michael took 174.2770 seconds and 143476 bad guesses to run problem 2 rotated inverted reflected
+Michael took 62.1606 seconds and 48841 bad guesses to run problem 2 flipped
+Michael took 77.5700 seconds and 61951 bad guesses to run problem 2 rotated flipped
+Michael took 74.7520 seconds and 60406 bad guesses to run problem 2 inverted flipped
+Michael took 130.8118 seconds and 100428 bad guesses to run problem 2 rotated inverted flipped
+Michael took 171.8083 seconds and 135563 bad guesses to run problem 2 reflected flipped
+Michael took 48.4610 seconds and 36378 bad guesses to run problem 2 rotated reflected flipped
+Michael took 100.8767 seconds and 80302 bad guesses to run problem 2 inverted reflected flipped
+Michael took 81.5115 seconds and 61407 bad guesses to run problem 2 rotated inverted reflected flipped
+David 1 took 0.0086 seconds and 2 bad guesses to run problem 1
+David 1 took 0.0204 seconds and 67 bad guesses to run problem 1 rotated
+David 1 took 0.0046 seconds and 3 bad guesses to run problem 1 inverted
+David 1 took 0.0082 seconds and 15 bad guesses to run problem 1 rotated inverted
+David 1 took 0.0083 seconds and 15 bad guesses to run problem 1 reflected
+David 1 took 0.0053 seconds and 2 bad guesses to run problem 1 rotated reflected
+David 1 took 0.0206 seconds and 63 bad guesses to run problem 1 inverted reflected
+David 1 took 0.0043 seconds and 3 bad guesses to run problem 1 rotated inverted reflected
+David 1 took 0.0204 seconds and 42 bad guesses to run problem 1 flipped
+David 1 took 0.0040 seconds and 1 bad guesses to run problem 1 rotated flipped
+David 1 took 0.0062 seconds and 10 bad guesses to run problem 1 inverted flipped
+David 1 took 0.0066 seconds and 4 bad guesses to run problem 1 rotated inverted flipped
+David 1 took 0.0063 seconds and 4 bad guesses to run problem 1 reflected flipped
+David 1 took 0.0179 seconds and 42 bad guesses to run problem 1 rotated reflected flipped
+David 1 took 0.0053 seconds and 1 bad guesses to run problem 1 inverted reflected flipped
+David 1 took 0.0070 seconds and 10 bad guesses to run problem 1 rotated inverted reflected flipped
+David 1 took 0.1117 seconds and 412 bad guesses to run grandad slow problem
+David 1 took 0.0708 seconds and 273 bad guesses to run grandad slow problem rotated
+David 1 took 0.1925 seconds and 875 bad guesses to run grandad slow problem inverted
+David 1 took 0.0553 seconds and 151 bad guesses to run grandad slow problem rotated inverted
+David 1 took 0.0177 seconds and 38 bad guesses to run grandad slow problem reflected
+David 1 took 0.1072 seconds and 438 bad guesses to run grandad slow problem rotated reflected
+David 1 took 0.0878 seconds and 324 bad guesses to run grandad slow problem inverted reflected
+David 1 took 0.1348 seconds and 680 bad guesses to run grandad slow problem rotated inverted reflected
+David 1 took 0.1017 seconds and 475 bad guesses to run grandad slow problem flipped
+David 1 took 0.0959 seconds and 364 bad guesses to run grandad slow problem rotated flipped
+David 1 took 0.0080 seconds and 18 bad guesses to run grandad slow problem inverted flipped
+David 1 took 0.1176 seconds and 481 bad guesses to run grandad slow problem rotated inverted flipped
+David 1 took 0.0776 seconds and 286 bad guesses to run grandad slow problem reflected flipped
+David 1 took 0.0935 seconds and 469 bad guesses to run grandad slow problem rotated reflected flipped
+David 1 took 0.1128 seconds and 450 bad guesses to run grandad slow problem inverted reflected flipped
+David 1 took 0.0333 seconds and 161 bad guesses to run grandad slow problem rotated inverted reflected flipped
+David 1 took 0.4661 seconds and 2536 bad guesses to run problem 2
+David 1 took 1.9904 seconds and 10086 bad guesses to run problem 2 rotated
+David 1 took 1.6228 seconds and 8303 bad guesses to run problem 2 inverted
+David 1 took 2.1306 seconds and 11136 bad guesses to run problem 2 rotated inverted
+David 1 took 2.2959 seconds and 10974 bad guesses to run problem 2 reflected
+David 1 took 0.7440 seconds and 3304 bad guesses to run problem 2 rotated reflected
+David 1 took 2.2286 seconds and 10147 bad guesses to run problem 2 inverted reflected
+David 1 took 1.6874 seconds and 7734 bad guesses to run problem 2 rotated inverted reflected
+David 1 took 2.5003 seconds and 10626 bad guesses to run problem 2 flipped
+David 1 took 2.0733 seconds and 7426 bad guesses to run problem 2 rotated flipped
+David 1 took 6.6241 seconds and 27641 bad guesses to run problem 2 inverted flipped
+David 1 took 0.2116 seconds and 807 bad guesses to run problem 2 rotated inverted flipped
+David 1 took 0.1723 seconds and 881 bad guesses to run problem 2 reflected flipped
+David 1 took 3.0569 seconds and 13478 bad guesses to run problem 2 rotated reflected flipped
+David 1 took 1.5075 seconds and 6498 bad guesses to run problem 2 inverted reflected flipped
+David 1 took 5.2891 seconds and 25448 bad guesses to run problem 2 rotated inverted reflected flipped
+David 2 took 0.0048 seconds and 1 bad guesses to run problem 1
+David 2 took 0.0069 seconds and 7 bad guesses to run problem 1 rotated
+David 2 took 0.0050 seconds and 0 bad guesses to run problem 1 inverted
+David 2 took 0.0042 seconds and 2 bad guesses to run problem 1 rotated inverted
+David 2 took 0.0083 seconds and 11 bad guesses to run problem 1 reflected
+David 2 took 0.0057 seconds and 5 bad guesses to run problem 1 rotated reflected
+David 2 took 0.0058 seconds and 1 bad guesses to run problem 1 inverted reflected
+David 2 took 0.0052 seconds and 2 bad guesses to run problem 1 rotated inverted reflected
+David 2 took 0.0092 seconds and 11 bad guesses to run problem 1 flipped
+David 2 took 0.0064 seconds and 6 bad guesses to run problem 1 rotated flipped
+David 2 took 0.0035 seconds and 1 bad guesses to run problem 1 inverted flipped
+David 2 took 0.0037 seconds and 0 bad guesses to run problem 1 rotated inverted flipped
+David 2 took 0.0052 seconds and 3 bad guesses to run problem 1 reflected flipped
+David 2 took 0.0060 seconds and 6 bad guesses to run problem 1 rotated reflected flipped
+David 2 took 0.0038 seconds and 0 bad guesses to run problem 1 inverted reflected flipped
+David 2 took 0.0082 seconds and 10 bad guesses to run problem 1 rotated inverted reflected flipped
+David 2 took 0.0157 seconds and 19 bad guesses to run grandad slow problem
+David 2 took 0.0875 seconds and 291 bad guesses to run grandad slow problem rotated
+David 2 took 0.0851 seconds and 162 bad guesses to run grandad slow problem inverted
+David 2 took 0.0174 seconds and 20 bad guesses to run grandad slow problem rotated inverted
+David 2 took 0.0323 seconds and 80 bad guesses to run grandad slow problem reflected
+David 2 took 0.2678 seconds and 811 bad guesses to run grandad slow problem rotated reflected
+David 2 took 0.0266 seconds and 28 bad guesses to run grandad slow problem inverted reflected
+David 2 took 0.0507 seconds and 77 bad guesses to run grandad slow problem rotated inverted reflected
+David 2 took 0.0980 seconds and 202 bad guesses to run grandad slow problem flipped
+David 2 took 0.3583 seconds and 579 bad guesses to run grandad slow problem rotated flipped
+David 2 took 0.1632 seconds and 170 bad guesses to run grandad slow problem inverted flipped
+David 2 took 0.1045 seconds and 107 bad guesses to run grandad slow problem rotated inverted flipped
+David 2 took 0.2410 seconds and 665 bad guesses to run grandad slow problem reflected flipped
+David 2 took 0.0221 seconds and 28 bad guesses to run grandad slow problem rotated reflected flipped
+David 2 took 0.0881 seconds and 175 bad guesses to run grandad slow problem inverted reflected flipped
+David 2 took 0.0195 seconds and 24 bad guesses to run grandad slow problem rotated inverted reflected flipped
+David 2 took 2.5944 seconds and 6631 bad guesses to run problem 2
+David 2 took 1.0680 seconds and 3400 bad guesses to run problem 2 rotated
+David 2 took 2.1252 seconds and 7146 bad guesses to run problem 2 inverted
+David 2 took 1.9419 seconds and 6272 bad guesses to run problem 2 rotated inverted
+David 2 took 0.6937 seconds and 1910 bad guesses to run problem 2 reflected
+David 2 took 2.0011 seconds and 6486 bad guesses to run problem 2 rotated reflected
+David 2 took 1.5847 seconds and 5538 bad guesses to run problem 2 inverted reflected
+David 2 took 2.2399 seconds and 7817 bad guesses to run problem 2 rotated inverted reflected
+David 2 took 0.5522 seconds and 1647 bad guesses to run problem 2 flipped
+David 2 took 2.6703 seconds and 8336 bad guesses to run problem 2 rotated flipped
+David 2 took 1.5190 seconds and 5226 bad guesses to run problem 2 inverted flipped
+David 2 took 1.5267 seconds and 3932 bad guesses to run problem 2 rotated inverted flipped
+David 2 took 2.5748 seconds and 7268 bad guesses to run problem 2 reflected flipped
+David 2 took 1.8034 seconds and 5956 bad guesses to run problem 2 rotated reflected flipped
+David 2 took 2.1656 seconds and 7383 bad guesses to run problem 2 inverted reflected flipped
+David 2 took 0.1629 seconds and 547 bad guesses to run problem 2 rotated inverted reflected flipped
 
-Process finished with exit code 0
+Robert took a total of 8.177 seconds and 4371 bad guesses. Each bad guess took 1.871 milliseconds on average
+Michael took a total of 1550.558 seconds and 1217355 bad guesses. Each bad guess took 1.274 milliseconds on average
+David 1 took a total of 36.173 seconds and 163204 bad guesses. Each bad guess took 0.222 milliseconds on average
+David 2 took a total of 28.993 seconds and 88999 bad guesses. Each bad guess took 0.326 milliseconds on average
