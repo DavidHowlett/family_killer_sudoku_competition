@@ -8,7 +8,6 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - the solutions of each of the solvers should be checked against each other
     - understand robert's code
     - unify on a single representation of the rules
 
@@ -78,58 +77,8 @@ def section_sum(x):
     return sum(square_possibilities(x))
 
 
-def setup(problem):
-    """This defines all the globals needed and returns a formatted list of sections
-    >>> import problems
-    >>> sections = setup(problems.problems['problem 1'])
-    >>> sections[4]
-    {'total': 10, 'locs': {4, 5}, 'combos': [40, 68, 130, 257]}
-    """
-    global friends
-    global groups
-    global group_memberships
-    initial_sections = [{
-            'total': total,
-            'locs': {x + y * 9 for x, y in section},
-            'combos': combos[len(section)][total]}
-        for total, section in problem]
-    sections = [None for _ in range(81)]
-    for section in initial_sections:
-        for loc in section['locs']:
-            sections[loc] = section
-    groups = rows + cols + boxes + [section['locs'] for section in initial_sections]
-    # I need to know which groups each square is a member of
-    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
-    # friends of a location are the locations that share a row, column or box
-    friends = [set.union(*group_memberships[loc]).difference({loc})for loc in range(81)]
-    return sections
-
-
-def init_board(sections):
-    """Create a board from a list of sections
-    >>> import problems
-    >>> sections = setup(problems.problems['problem 1'])
-    >>> board = init_board(sections)
-    >>> len(board)
-    81
-    >>> board[:4]  # The board now contains the possible values at each position
-    [320, 320, 5, 5]
-    """
-    board = [0b111_111_111 for _ in range(81)]
-    for section in sections:
-        possible_values = union(section['combos'])
-        for loc in section['locs']:
-            board[loc] = possible_values
-    return board
-
-
 def print_board(board):
-    """ This prints a board in a human readable form
-    >>> import problems
-    >>> sections = setup(problems.problems['problem 1'])
-    >>> board = init_board(sections)
-    >>> add_value(board, sections, 0, 256)
-    >>> print_board(board)
+    """ This prints a board in a human readable form. The result should look like:
     9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
     . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
     . . . . . . . . .  |  190 184 184 511 480  15  15 504   5
@@ -139,8 +88,6 @@ def print_board(board):
     . . . . . . . . .  |   63  55   5   5 119 511 432 432 480
     . . . . . . . . .  |  255 447 432 432 119 511 511  63  63
     . . . . . . . . .  |  255 384 384  63  63  63  63 504 504
-    <BLANKLINE>
-    <BLANKLINE>
     """
     to_print = ''
     for row in range(9):
@@ -200,16 +147,7 @@ def add_value(board, sections, loc, single_possibility):
 
 
 def remove_possibilities(board, sections, loc, possibilities, recurse, ):
-    """This takes a board and removes a collection of possibilities from a single square
-    >>> import problems
-    >>> sections = setup(problems.problems['problem 1'])
-    >>> board = init_board(sections)
-    >>> remove_possibilities(board, sections, 0, 64, True)
-    >>> board[0]
-    256
-    >>> board[1]
-    64
-    """
+    """This takes a board and removes a collection of possibilities from a single square."""
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
@@ -240,6 +178,7 @@ def solver(board, sections):
     progress_made = True
     while progress_made:
         progress_made = False
+
         for group in static_groups:
             for loc in group:
                 # don't bother looking at squares that already known
@@ -256,6 +195,7 @@ def solver(board, sections):
                             raise Contradiction
                         add_value(board, sections, loc, digits_unaccounted_for)
                         progress_made = True
+
         """
         for rule in rules:
             if rule[2]:
@@ -304,10 +244,28 @@ def solver(board, sections):
 def main(problem):
     global add_value_calls
     global bad_guesses
+    global friends
     add_value_calls = 0
     bad_guesses = 0
-    sections = setup(problem)
-    board = init_board(sections)
+    initial_sections = [{
+            'total': total,
+            'locs': {x + y * 9 for x, y in section},
+            'combos': combos[len(section)][total]}
+        for total, section in problem]
+    sections = [None for _ in range(81)]
+    for section in initial_sections:
+        for loc in section['locs']:
+            sections[loc] = section
+    groups = rows + cols + boxes + [section['locs'] for section in initial_sections]
+    # I need to know which groups each square is a member of
+    group_memberships = [[group for group in groups if loc in group] for loc in range(81)]
+    # friends of a location are the locations that share a row, column or box
+    friends = [set.union(*group_memberships[loc]).difference({loc}) for loc in range(81)]
+    board = [0b111_111_111 for _ in range(81)]
+    for section in sections:
+        possible_values = union(section['combos'])
+        for loc in section['locs']:
+            board[loc] = possible_values
     solved_board = solver(board, sections)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
@@ -328,11 +286,12 @@ assert val_to_set[4] == 8
 
 add_value_calls = 0
 bad_guesses = 0
+friends = []
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
-static_groups = boxes+rows+cols
+static_groups = boxes+rows+cols  # todo remove this variable
 # combos contains every possible collection of the digits 1-9
 combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
