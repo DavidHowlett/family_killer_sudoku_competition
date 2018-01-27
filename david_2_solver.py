@@ -8,8 +8,9 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
+    - write thorough unit tests for add_value and remove_possibilities
+    - verify that the semi-deep copy that I am using works correctly. Ideally this would be a unit test.
     - understand robert's code
-    - unify on a single representation of the rules
 
     - simplify the unit tests (it is okay to have shared imports and setup)
     - cover the solver and main with unit tests
@@ -78,7 +79,10 @@ def section_sum(x):
 
 
 def print_board(board):
-    """ This prints a board in a human readable form. The result should look like:
+    """This prints a board in a human readable form with the solved squares and the possible values both shown.
+    >>> board, rules = setup(test_problem)
+    >>> add_value(board, rules, 0, 256)
+    >>> print_board(board)
     9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
     . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
     . . . . . . . . .  |  190 184 184 511 480  15  15 504   5
@@ -88,6 +92,8 @@ def print_board(board):
     . . . . . . . . .  |   63  55   5   5 119 511 432 432 480
     . . . . . . . . .  |  255 447 432 432 119 511 511  63  63
     . . . . . . . . .  |  255 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
     """
     to_print = ''
     for row in range(9):
@@ -108,19 +114,42 @@ def print_board(board):
     print(to_print)
 
 
-def add_value(board, sections, loc, single_possibility):
+def add_value(board, rules, loc, single_possibility):
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
-    This function will change the given board and sections. It may raise a Contradiction. 
+    This function will change the given board and rules. It may raise a Contradiction.
     Only call add_value on squares that don't have a value already.
-    >>> import problems
-    >>> board, sections = setup(problems.problems[0][1])
-    >>> add_value(board, sections, 0, 256)
+    >>> board, rules = setup(test_problem)
+    >>> print_board(board)
+    . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
+    . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
+    . . . . . . . . .  |  510 504 504 511 480  15  15 504   5
+    . . . . . . . . .  |  510  27  27 511 511 510 495 504   5
+    . . . . . . . . .  |  255 255 320 119 511 510 495  63  63
+    . . . . . . . . .  |   63 119 320 119 511 511 255 255 480
+    . . . . . . . . .  |   63 119   5   5 119 511 432 432 480
+    . . . . . . . . .  |  511 511 432 432 119 511 511  63  63
+    . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
+    >>> add_value(board, rules, 0, 256)
     >>> board[0]
     256
     >>> board[1]
     64
     >>> board[9] & 256
     0
+    >>> print_board(board)
+    9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
+    . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
+    . . . . . . . . .  |  190 184 184 511 480  15  15 504   5
+    . . . . . . . . .  |  254  27  27 511 511 510 495 504   5
+    . . . . . . . . .  |  255 191 320 119 511 510 495  63  63
+    . . . . . . . . .  |   63  55 320 119 511 511 255 255 480
+    . . . . . . . . .  |   63  55   5   5 119 511 432 432 480
+    . . . . . . . . .  |  255 447 432 432 119 511 511  63  63
+    . . . . . . . . .  |  255 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
     """
     global add_value_calls
     assert 0 <= loc < 81
@@ -128,13 +157,13 @@ def add_value(board, sections, loc, single_possibility):
     assert single_possibility != board[loc]
     add_value_calls += 1
     # set the current square
-    remove_possibilities(board, sections, loc, ~single_possibility, False)
+    remove_possibilities(board, rules, loc, ~single_possibility, False)
     # we now know that the value in the current square can't be found in any of the neighbors
     for rule in rule_memberships[loc]:
         for loc2 in rule['locs']:
             # only do the work to remove a value if the value is currently considered possible
             if loc2 != loc and single_possibility & board[loc2]:
-                remove_possibilities(board, sections, loc2, single_possibility, True)
+                remove_possibilities(board, rules, loc2, single_possibility, True)
         # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
 
 
@@ -183,7 +212,7 @@ def solver(board, rules):
                             raise Contradiction
                         if not digits_unaccounted_for & board[loc]:
                             raise Contradiction
-                        add_value(board, sections, loc, digits_unaccounted_for)
+                        add_value(board, rules, loc, digits_unaccounted_for)
                         progress_made = True
         '''
         """
@@ -211,7 +240,7 @@ def solver(board, rules):
         '''
         '''
         # if all the squares in a section are solved check that the section has the right total
-        section = sections[loc]
+        section = rules[loc]
         if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
             if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
                 # assert False
@@ -256,8 +285,19 @@ def solver(board, rules):
 
 def setup(problem):
     """
-    >>> import problems
-    >>> board, sections = setup(problems.problems[32][1])
+    >>> board, rules = setup(test_problem)
+    >>> print_board(board)
+    . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
+    . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
+    . . . . . . . . .  |  510 504 504 511 480  15  15 504   5
+    . . . . . . . . .  |  510  27  27 511 511 510 495 504   5
+    . . . . . . . . .  |  255 255 320 119 511 510 495  63  63
+    . . . . . . . . .  |   63 119 320 119 511 511 255 255 480
+    . . . . . . . . .  |   63 119   5   5 119 511 432 432 480
+    . . . . . . . . .  |  511 511 432 432 119 511 511  63  63
+    . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
     """
     global add_value_calls
     global bad_guesses
@@ -321,6 +361,17 @@ assert combos[2][3] == [3]
 assert combos[2][5] == [6, 9]
 
 if __name__ == '__main__':
-    doctest.testmod()
     import problems
-    print(main(problems.problems[32][1]))
+    import david_1_solver
+    test_problem = problems.problems[0][1]
+    test_board, test_rules = setup(test_problem)
+    old_sections = david_1_solver.setup(test_problem)
+    old_board = david_1_solver.init_board(old_sections)
+    assert old_board == test_board
+    print_board(test_board)
+    add_value(test_board, test_rules, 4+4*9, 256)
+    david_1_solver.add_value(old_board, old_sections, 4+4*9, 256)
+    assert old_board == test_board
+    print_board(test_board)
+    doctest.testmod()
+    # print(main(test_problem))
