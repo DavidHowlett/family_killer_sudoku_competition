@@ -8,12 +8,10 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - write thorough unit tests for add_value and remove_possibilities
-    - verify that the semi-deep copy that I am using works correctly. Ideally this would be a unit test.
+    - rule_memberships should not be a global
+    - unit tests should pass
     - understand robert's code
-
-    - simplify the unit tests (it is okay to have shared imports and setup)
-    - cover the solver and main with unit tests
+    -
     - simplify my code (this should be allowed to make it slower)
     - add better deductive logic
 
@@ -23,7 +21,7 @@ moved the location of the search for the missing digit
 David 2 took a total of 27.883 seconds and 88999 bad guesses. Each bad guess took 0.313 milliseconds on average
 """
 import doctest
-
+import copy
 
 class Contradiction(Exception):
     """Raised when the board is in an inconsistent state"""
@@ -114,7 +112,7 @@ def print_board(board):
     print(to_print)
 
 
-def add_value(board, rules, loc, single_possibility):
+def add_value(board, rules, loc, single_possibility, rule_memberships):
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function will change the given board and rules. It may raise a Contradiction.
     Only call add_value on squares that don't have a value already.
@@ -157,24 +155,24 @@ def add_value(board, rules, loc, single_possibility):
     assert single_possibility != board[loc]
     add_value_calls += 1
     # set the current square
-    remove_possibilities(board, rules, loc, ~single_possibility, False)
+    remove_possibilities(board, rules, loc, ~single_possibility, False, rule_memberships)
     # we now know that the value in the current square can't be found in any of the neighbors
     for rule in rule_memberships[loc]:
         for loc2 in rule['locs']:
             # only do the work to remove a value if the value is currently considered possible
             if loc2 != loc and single_possibility & board[loc2]:
-                remove_possibilities(board, rules, loc2, single_possibility, True)
+                remove_possibilities(board, rules, loc2, single_possibility, True, rule_memberships)
         # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
 
 
-def remove_possibilities(board, rules, loc, possibilities, recurse, ):
+def remove_possibilities(board, rules, loc, possibilities, recurse, rule_memberships):
     """This takes a board and removes a collection of possibilities from a single square."""
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
     new_possibilities = (~possibilities) & board[loc]
     if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
-        add_value(board, rules, loc, new_possibilities)
+        add_value(board, rules, loc, new_possibilities, rule_memberships)
     else:
         board[loc] = new_possibilities
     if board[loc] == 0:
@@ -186,10 +184,13 @@ def remove_possibilities(board, rules, loc, possibilities, recurse, ):
         rule['combos'] = new_combos
 
 
-def solver(board, rules):
+def solver(board, rules, index, rule_memberships):
+    """This solves an arbitrary board using deduction and when that fails, guessing solutions
+    >>> board, rules = setup(test_problem)
+    >>> solver(board, rules)
+    """
     global bad_guesses
-    print_board(board)
-    """This solves an arbitrary board using deduction and when that fails, guessing solutions"""
+    # print_board(board)
     # check if this leaves a group of 9 where a number can only be in one location
     # this is computationally expensive because I need to find a large number of unions
     # print_board(board)
@@ -270,13 +271,13 @@ def solver(board, rules):
             rule = rule.copy()
             rule['combos'] = rule['combos'].copy()
             possible_rules.append(rule)
+        new_rule_memberships = copy.deepcopy(rule_memberships)
         try:
-            add_value(possible_board, possible_rules, loc_to_guess, possibility)
-            return solver(possible_board, possible_rules)
+            add_value(possible_board, possible_rules, loc_to_guess, possibility, new_rule_memberships)
+            return solver(possible_board, possible_rules,index+1,new_rule_memberships)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
-            pass
     # if there is a square on the current board which has no possible values
     # then there is a contradiction somewhere
     # print('Backtrack')
@@ -301,7 +302,6 @@ def setup(problem):
     """
     global add_value_calls
     global bad_guesses
-    global rule_memberships
     add_value_calls = 0
     bad_guesses = 0
     # convert the problem specific rules to my format
@@ -318,13 +318,13 @@ def setup(problem):
         possible_values = union(rule['combos'])
         for loc in rule['locs']:
             board[loc] &= possible_values
-    return board, rules
+    return board, rules, rule_memberships
 
 
 def main(problem):
     """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
-    board, rules = setup(problem)
-    solved_board = solver(board, rules)
+    board, rules, rule_memberships = setup(problem)
+    solved_board = solver(board, rules, 0, rule_memberships)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
@@ -341,7 +341,6 @@ assert val_to_set[1] == 1
 assert val_to_set[2] == 2
 assert val_to_set[3] == 4
 assert val_to_set[4] == 8
-
 add_value_calls = 0
 bad_guesses = 0
 rule_memberships = []
@@ -359,19 +358,10 @@ combos = [[[possible_section for possible_section in combos
 assert combos[2][3] == [3]
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
 assert combos[2][5] == [6, 9]
+# doctest.testmod()
 
 if __name__ == '__main__':
     import problems
-    import david_1_solver
     test_problem = problems.problems[0][1]
-    test_board, test_rules = setup(test_problem)
-    old_sections = david_1_solver.setup(test_problem)
-    old_board = david_1_solver.init_board(old_sections)
-    assert old_board == test_board
-    print_board(test_board)
-    add_value(test_board, test_rules, 4+4*9, 256)
-    david_1_solver.add_value(old_board, old_sections, 4+4*9, 256)
-    assert old_board == test_board
-    print_board(test_board)
-    doctest.testmod()
-    # print(main(test_problem))
+    test_board, test_rules, rule_memberships = setup(test_problem)
+    solver(test_board, test_rules, 0, rule_memberships)

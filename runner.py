@@ -11,7 +11,7 @@ solvers = [
     ('Robert', robert_solver),
     ('Michael', michael_solver),
     ('David 1', david_1_solver),
-    # ('David 2', david_2_solver),
+    ('David 2', david_2_solver),
 ]
 
 solutions = dict()
