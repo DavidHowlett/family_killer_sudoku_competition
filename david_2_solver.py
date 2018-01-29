@@ -8,11 +8,7 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - rule_memberships should not be a global
-    - unit tests should pass
     - understand robert's code
-    -
-    - simplify my code (this should be allowed to make it slower)
     - add better deductive logic
 
 
@@ -21,6 +17,8 @@ moved the location of the search for the missing digit
 David 2 took a total of 27.883 seconds and 88999 bad guesses. Each bad guess took 0.313 milliseconds on average
 major rework of the data structures to have a unified set of rules.
 David 2 took 0.1815 seconds and 350 bad guesses to run grandad slow problem
+replaced functions with lookups
+David 2 took 0.0897 seconds and 350 bad guesses to run grandad slow problem
 """
 import doctest
 import copy
@@ -41,42 +39,6 @@ def union(xs):
     for x in xs:
         y = y | x
     return y
-
-
-def pop_count(x):
-    """This finds the number of 1's in the binary representation of a number
-    If this is a bottleneck it should be replaced this with gmpy.popcount(a)
-    >>> pop_count(0)
-    0
-    >>> pop_count(1)
-    1
-    >>> pop_count(5)
-    2
-    """
-    return bin(x).count('1')
-
-
-def square_possibilities(square):
-    """This prints the possibilities of a square as a list
-    >>> square_possibilities(0)
-    []
-    >>> square_possibilities(1+4+16)
-    [1, 3, 5]
-    >>> for square in range(512):assert len(square_possibilities(square)) == pop_count(square)
-    """
-    return [i+1 for i in range(9) if square & 1 << i]
-
-
-def section_sum(x):
-    """This returns the sum of every possibility in a square or combo
-    >>> section_sum(0)
-    0
-    >>> section_sum(5)
-    4
-    >>> section_sum(7)
-    6
-    """
-    return sum(square_possibilities(x))
 
 
 def print_board(board):
@@ -194,7 +156,7 @@ def solver(board, rules, rule_memberships):
     [256, 64, 1, 4, 8, 32, 16, 128, ...
     """
     global bad_guesses
-    # print_board(board)
+    print_board(board)
     # check if this leaves a group of 9 where a number can only be in one location
     # this is computationally expensive because I need to find a large number of unions
     # print_board(board)
@@ -256,7 +218,7 @@ def solver(board, rules, rule_memberships):
     min_possibility_count = 999
     # find the uncertain square with the least possible values
     for loc in range(81):
-        possibility_count = pop_count(board[loc])
+        possibility_count = pop_count[board[loc]]
         if 1 < possibility_count < min_possibility_count:
             min_possibility_count = possibility_count
             loc_to_guess = loc
@@ -347,6 +309,9 @@ assert val_to_set[1] == 1
 assert val_to_set[2] == 2
 assert val_to_set[3] == 4
 assert val_to_set[4] == 8
+
+pop_count = [bin(x).count('1') for x in range(512)]
+set_to_list = [[i+1 for i in range(9) if j & 1 << i] for j in range(512)]
 add_value_calls = 0
 bad_guesses = 0
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
@@ -354,11 +319,10 @@ cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
          for box_row in range(3) for box_col in range(3)]
 # combos contains every possible collection of the digits 1-9
-combos = list(range(512))
 # then group them by number of squares in the section and the sum of all the values in the section
 # this looks like combo[length][total]
-combos = [[[possible_section for possible_section in combos
-            if pop_count(possible_section) == length and section_sum(possible_section) == total]
+combos = [[[possible_section for possible_section in range(512)
+            if pop_count[possible_section] == length and sum(set_to_list[possible_section]) == total]
            for total in range(46)] for length in range(9)]
 assert combos[2][3] == [3]
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
@@ -370,4 +334,4 @@ if __name__ == '__main__':
     doctest.testmod()
     test_board, test_rules, test_rule_memberships = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships)
-    print(test_solved_board)
+    print(bad_guesses, test_solved_board)
