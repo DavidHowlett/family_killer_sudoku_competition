@@ -8,8 +8,12 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
+    - start using the 'to process' variable
+    - subtract rule 1 from rule 2 if rule 1 is in rule 2
+    - experiment with "process rule" being a callable function,
+        this would allow the use of the profiler
+        this would allow calls inside add_value and remove_possibility
     - understand robert's code
-    - add better deductive logic
 
 
 David 2 took a total of 32.328 seconds and 146381 bad guesses. Each bad guess took 0.221 milliseconds on average
@@ -19,9 +23,10 @@ major rework of the data structures to have a unified set of rules.
 David 2 took 0.1815 seconds and 350 bad guesses to run grandad slow problem
 replaced functions with lookups
 David 2 took 0.0897 seconds and 350 bad guesses to run grandad slow problem
+added deductions using combos
+David 2 took 0.0311 seconds and 54 bad guesses to run grandad slow problem
 """
 import doctest
-import copy
 
 
 class Contradiction(Exception):
@@ -75,6 +80,50 @@ def print_board(board):
         to_print += '\n'
     to_print += '\n'
     print(to_print)
+
+
+def setup(problem):
+    """
+    >>> board, rules, rule_memberships = setup(test_problem)
+    >>> print_board(board)
+    . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
+    . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
+    . . . . . . . . .  |  510 504 504 511 480  15  15 504   5
+    . . . . . . . . .  |  510  27  27 511 511 510 495 504   5
+    . . . . . . . . .  |  255 255 320 119 511 510 495  63  63
+    . . . . . . . . .  |   63 119 320 119 511 511 255 255 480
+    . . . . . . . . .  |   63 119   5   5 119 511 432 432 480
+    . . . . . . . . .  |  511 511 432 432 119 511 511  63  63
+    . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
+    <BLANKLINE>
+    <BLANKLINE>
+    """
+    global add_value_calls
+    global bad_guesses
+    add_value_calls = 0
+    bad_guesses = 0
+    # convert the problem specific rules to my format
+    rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
+             for total, section in problem]
+    # convert the static rules to my format
+    rules += [{'locs': locs, 'combos': {511}, 'to process': True}
+              for locs in rows + cols + boxes]
+    # I need to know which groups each square is a member of
+    rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
+    assert len(rule_memberships[0]) == 4
+    board = [511]*81
+    for rule in rules:
+        possible_values = union(rule['combos'])
+        for loc in rule['locs']:
+            board[loc] &= possible_values
+    return board, rules, rule_memberships
+
+
+def main(problem):
+    """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
+    board, rules, rule_memberships = setup(problem)
+    solved_board = solver(board, rules, rule_memberships)
+    return [set_to_val[square] for square in solved_board], bad_guesses
 
 
 def add_value(board, rules, rule_memberships, loc, single_possibility):
@@ -156,17 +205,32 @@ def solver(board, rules, rule_memberships):
     [256, 64, 1, 4, 8, 32, 16, 128, ...
     """
     global bad_guesses
-    print_board(board)
+    # print_board(board)
     # check if this leaves a group of 9 where a number can only be in one location
     # this is computationally expensive because I need to find a large number of unions
     # print_board(board)
     progress_made = True
     while progress_made:
         progress_made = False
+        for rule in rules:
+            # remove combos if they need values that are not present
+            # this is implemented in a simple way, more possibilities could be excluded
+            banned_values = ~union(board[loc] for loc in rule['locs'])
+            new_combos = [combo for combo in rule['combos'] if not (combo & banned_values)]
+            if not new_combos:
+                raise Contradiction
+            if new_combos != rule['combos']:
+                progress_made = True
+                rule['combos'] = new_combos
 
-        '''
-        for group in static_groups:
-            for loc in group:
+            # remove values from squares if they are not in any combo
+            banned_values = ~union(rule['combos'])
+            for loc in rule['locs']:
+                if board[loc] & banned_values:
+                    remove_possibilities(board, rules, rule_memberships, loc, banned_values, True)
+
+            '''
+            for loc in rule['locs']:
                 # don't bother looking at squares that already known
                 if board[loc] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
                     found_digits = 0
@@ -181,9 +245,11 @@ def solver(board, rules, rule_memberships):
                             raise Contradiction
                         add_value(board, rules, loc, digits_unaccounted_for)
                         progress_made = True
-        '''
-        """
-        for rule in rules:
+            '''
+            '''
+            # If a subset of a rule contains as many possibilities as the size of the subset
+            # then all the possibilities in the subset can be removed from every part of the
+            # rule not in the subset
             if rule[2]:
                 for subset in rule:
                     possibilities = union(subset)
@@ -191,29 +257,9 @@ def solver(board, rules, rule_memberships):
                     if number_of_possibilities < len(subset):
                         raise Contradiction
                     elif number_of_possibilities == len(subset):
-                        # then I can exclude lots of possibilities from the others locations in the rule
-                    
-                    
-        """
-        '''
-        # exclude combo possibilities that become impossible
-        section = rules[loc] # todo wrong
-        new_combos = [combo for combo in section['combos'] if board[loc] & combo]
-        if new_combos != section['combos']:
-            # use the new combos to reduce the possibilities in a section
-            section['combos'] = new_combos
-            for loc2 in section['locs']:
-                remove_possibilities(board, rules, loc2, ~union(section['combos']), True)
-        '''
-        '''
-        # if all the squares in a section are solved check that the section has the right total
-        section = rules[loc]
-        if all(board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256} for loc in section['locs']):  # Todo this is inefficient
-            if not (section_sum(union(board[loc] for loc in section['locs'])) == section['total']):
-                # assert False
-                raise Contradiction
-            # assert section_sum(union(board[loc] for loc in section['locs'])) == section['total']
-        '''
+                        # then I can exclude lots of possibilities from the others locations in the rule  
+            '''
+
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -250,50 +296,6 @@ def solver(board, rules, rule_memberships):
     # then there is a contradiction somewhere
     # print('Backtrack')
     raise Contradiction
-
-
-def setup(problem):
-    """
-    >>> board, rules, rule_memberships = setup(test_problem)
-    >>> print_board(board)
-    . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
-    . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
-    . . . . . . . . .  |  510 504 504 511 480  15  15 504   5
-    . . . . . . . . .  |  510  27  27 511 511 510 495 504   5
-    . . . . . . . . .  |  255 255 320 119 511 510 495  63  63
-    . . . . . . . . .  |   63 119 320 119 511 511 255 255 480
-    . . . . . . . . .  |   63 119   5   5 119 511 432 432 480
-    . . . . . . . . .  |  511 511 432 432 119 511 511  63  63
-    . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
-    <BLANKLINE>
-    <BLANKLINE>
-    """
-    global add_value_calls
-    global bad_guesses
-    add_value_calls = 0
-    bad_guesses = 0
-    # convert the problem specific rules to my format
-    rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
-             for total, section in problem]
-    # convert the static rules to my format
-    rules += [{'locs': locs, 'combos': {511}, 'to process': True}
-              for locs in rows + cols + boxes]
-    # I need to know which groups each square is a member of
-    rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
-    assert len(rule_memberships[0]) == 4
-    board = [511]*81
-    for rule in rules:
-        possible_values = union(rule['combos'])
-        for loc in rule['locs']:
-            board[loc] &= possible_values
-    return board, rules, rule_memberships
-
-
-def main(problem):
-    """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
-    board, rules, rule_memberships = setup(problem)
-    solved_board = solver(board, rules, rule_memberships)
-    return [set_to_val[square] for square in solved_board], bad_guesses
 
 
 set_to_val = {1 << i: i+1 for i in range(9)}
