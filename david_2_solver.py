@@ -19,9 +19,12 @@ ToDo:
 David 2 took a total of 32.328 seconds and 146381 bad guesses. Each bad guess took 0.221 milliseconds on average
 moved the location of the search for the missing digit
 David 2 took a total of 27.883 seconds and 88999 bad guesses. Each bad guess took 0.313 milliseconds on average
+major rework of the data structures to have a unified set of rules.
+David 2 took 0.1815 seconds and 350 bad guesses to run grandad slow problem
 """
 import doctest
 import copy
+
 
 class Contradiction(Exception):
     """Raised when the board is in an inconsistent state"""
@@ -78,8 +81,8 @@ def section_sum(x):
 
 def print_board(board):
     """This prints a board in a human readable form with the solved squares and the possible values both shown.
-    >>> board, rules = setup(test_problem)
-    >>> add_value(board, rules, 0, 256)
+    >>> board, rules, rule_memberships = setup(test_problem)
+    >>> add_value(board, rules, rule_memberships, 0, 256)
     >>> print_board(board)
     9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
     . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
@@ -112,11 +115,11 @@ def print_board(board):
     print(to_print)
 
 
-def add_value(board, rules, loc, single_possibility, rule_memberships):
+def add_value(board, rules, rule_memberships, loc, single_possibility):
     """Given a board and a location set the value at the location and remove all numbers that are now impossible.
     This function will change the given board and rules. It may raise a Contradiction.
     Only call add_value on squares that don't have a value already.
-    >>> board, rules = setup(test_problem)
+    >>> board, rules, rule_memberships = setup(test_problem)
     >>> print_board(board)
     . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
     . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
@@ -129,7 +132,7 @@ def add_value(board, rules, loc, single_possibility, rule_memberships):
     . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
     <BLANKLINE>
     <BLANKLINE>
-    >>> add_value(board, rules, 0, 256)
+    >>> add_value(board, rules, rule_memberships, 0, 256)
     >>> board[0]
     256
     >>> board[1]
@@ -155,24 +158,24 @@ def add_value(board, rules, loc, single_possibility, rule_memberships):
     assert single_possibility != board[loc]
     add_value_calls += 1
     # set the current square
-    remove_possibilities(board, rules, loc, ~single_possibility, False, rule_memberships)
+    remove_possibilities(board, rules, rule_memberships, loc, ~single_possibility, False)
     # we now know that the value in the current square can't be found in any of the neighbors
     for rule in rule_memberships[loc]:
         for loc2 in rule['locs']:
             # only do the work to remove a value if the value is currently considered possible
             if loc2 != loc and single_possibility & board[loc2]:
-                remove_possibilities(board, rules, loc2, single_possibility, True, rule_memberships)
+                remove_possibilities(board, rules, rule_memberships, loc2, single_possibility, True)
         # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
 
 
-def remove_possibilities(board, rules, loc, possibilities, recurse, rule_memberships):
+def remove_possibilities(board, rules, rule_memberships, loc, possibilities, recurse):
     """This takes a board and removes a collection of possibilities from a single square."""
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
     new_possibilities = (~possibilities) & board[loc]
     if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
-        add_value(board, rules, loc, new_possibilities, rule_memberships)
+        add_value(board, rules, rule_memberships, loc, new_possibilities)
     else:
         board[loc] = new_possibilities
     if board[loc] == 0:
@@ -184,10 +187,11 @@ def remove_possibilities(board, rules, loc, possibilities, recurse, rule_members
         rule['combos'] = new_combos
 
 
-def solver(board, rules, index, rule_memberships):
+def solver(board, rules, rule_memberships):
     """This solves an arbitrary board using deduction and when that fails, guessing solutions
-    >>> board, rules = setup(test_problem)
-    >>> solver(board, rules)
+    >>> board, rules, rule_memberships = setup(test_problem)
+    >>> solver(board, rules, rule_memberships) # doctest: +ELLIPSIS
+    [256, 64, 1, 4, 8, 32, 16, 128, ...
     """
     global bad_guesses
     # print_board(board)
@@ -267,14 +271,16 @@ def solver(board, rules, index, rule_memberships):
             continue
         possible_board = board[:]
         possible_rules = []
+        possible_rule_memberships = [[] for _ in range(81)]
         for rule in rules:
             rule = rule.copy()
             rule['combos'] = rule['combos'].copy()
             possible_rules.append(rule)
-        new_rule_memberships = copy.deepcopy(rule_memberships)
+            for loc in rule['locs']:
+                possible_rule_memberships[loc].append(rule)
         try:
-            add_value(possible_board, possible_rules, loc_to_guess, possibility, new_rule_memberships)
-            return solver(possible_board, possible_rules,index+1,new_rule_memberships)
+            add_value(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, possibility)
+            return solver(possible_board, possible_rules, possible_rule_memberships)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
@@ -286,7 +292,7 @@ def solver(board, rules, index, rule_memberships):
 
 def setup(problem):
     """
-    >>> board, rules = setup(test_problem)
+    >>> board, rules, rule_memberships = setup(test_problem)
     >>> print_board(board)
     . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
     . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
@@ -324,7 +330,7 @@ def setup(problem):
 def main(problem):
     """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
     board, rules, rule_memberships = setup(problem)
-    solved_board = solver(board, rules, 0, rule_memberships)
+    solved_board = solver(board, rules, rule_memberships)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
@@ -343,7 +349,6 @@ assert val_to_set[3] == 4
 assert val_to_set[4] == 8
 add_value_calls = 0
 bad_guesses = 0
-rule_memberships = []
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
 boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3)}
@@ -358,10 +363,11 @@ combos = [[[possible_section for possible_section in combos
 assert combos[2][3] == [3]
 # a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
 assert combos[2][5] == [6, 9]
-# doctest.testmod()
 
 if __name__ == '__main__':
     import problems
     test_problem = problems.problems[0][1]
-    test_board, test_rules, rule_memberships = setup(test_problem)
-    solver(test_board, test_rules, 0, rule_memberships)
+    doctest.testmod()
+    test_board, test_rules, test_rule_memberships = setup(test_problem)
+    test_solved_board = solver(test_board, test_rules, test_rule_memberships)
+    print(test_solved_board)
