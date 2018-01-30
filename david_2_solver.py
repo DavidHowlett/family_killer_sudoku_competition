@@ -8,12 +8,10 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - simplify the setup code using the 'to process' variable instead of smart initialisation
     - generalise the "# set a value if it can only be in one location in the rule" to work with all subsets of a rule
     - subtract rule 1 from rule 2 if rule 1 is a subset of rule 2
     - if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
         then remove "5" from all locations in rule B not in the overlap
-    - try removing add_value and replacing it with a smarter remove_possibilities
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
         this would allow calls inside add_value and remove_possibility
@@ -37,8 +35,11 @@ removed add_value
 David 2 took a total of 5.210 seconds and 3506 bad guesses. Each bad guess took 1.486 milliseconds on average
 added "to process" variable
 David 2 took a total of 3.181 seconds and 3506 bad guesses. Each bad guess took 0.907 milliseconds on average
+added checks on all subsets of all rules
+David 2 took a total of 42.416 seconds and 1873 bad guesses. Each bad guess took 22.646 milliseconds on average
 """
 import doctest
+import itertools
 
 
 class Contradiction(Exception):
@@ -110,9 +111,7 @@ def setup(problem):
     <BLANKLINE>
     <BLANKLINE>
     """
-    global add_value_calls
     global bad_guesses
-    add_value_calls = 0
     bad_guesses = 0
     # convert the problem specific rules to my format
     rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
@@ -196,7 +195,7 @@ def solver(board, rules, rule_memberships):
             for loc in rule['locs']:
                 if board[loc] & banned_values:
                     remove_possibilities(board, rules, rule_memberships, loc, banned_values)
-
+            # '''
             # set a value if it can only be in one location in the rule
             for loc in rule['locs']:
                 # don't bother looking at squares that are already known
@@ -222,20 +221,22 @@ def solver(board, rules, rule_memberships):
                     else:
                         # if more then one value must be in the current square then something has gone wrong.
                         raise Contradiction
-
             '''
-            # If a subset of a rule contains as many possibilities as the size of the subset
-            # then all the possibilities in the subset can be removed from every part of the
-            # rule not in the subset
+            # for every subset in the rule if the number of possibilities in the subset is the same size as the subset
+            # then remove the possibilities from all parts of the rule not in the subset
             # this is a generalisation of the deduction "set a value if it can only be in one location in the rule"
-            if rule[2]:
-                for subset in rule:
-                    possibilities = union(subset)
-                    number_of_possibilities = popcount(possibilities)
+            locs = rule['locs']
+            for subset_size in range(2, len(locs)-1):
+                for subset in itertools.combinations(locs, subset_size):
+                    possibilities = union(board[loc] for loc in subset)
+                    number_of_possibilities = pop_count[possibilities]
                     if number_of_possibilities < len(subset):
                         raise Contradiction
                     elif number_of_possibilities == len(subset):
-                        # then I can exclude lots of possibilities from the others locations in the rule  
+                        # then I can exclude lots of possibilities from the others locations in the rule
+                        for loc in locs:
+                            if loc not in subset:
+                                remove_possibilities(board, rules, rule_memberships, loc, possibilities)
             '''
 
     loc_to_guess = None
@@ -292,7 +293,6 @@ assert val_to_set[4] == 8
 
 pop_count = [bin(x).count('1') for x in range(512)]
 set_to_list = [[i+1 for i in range(9) if j & 1 << i] for j in range(512)]
-add_value_calls = 0
 bad_guesses = 0
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]

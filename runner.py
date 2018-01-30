@@ -38,7 +38,7 @@ if __name__ == '__main__':
                 try:
                     result, bad_guesses = solver.main(problem)
                 except Exception as e:
-                    result, bad_guesses = e, 999
+                    result, bad_guesses = e, 1
                 run_time = time.process_time()-start_time
                 open(file_name, 'w').write(f'{run_time}\n{bad_guesses}\n{result}')
             # print(result)
