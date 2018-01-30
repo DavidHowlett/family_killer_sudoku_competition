@@ -8,9 +8,11 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - try removing add_value and replacing it with a smarter remove_possibilities
     - start using the 'to process' variable
-    - subtract rule 1 from rule 2 if rule 1 is in rule 2
+    - simplify the setup code using the 'to process' variable instead of smart initialisation
+    - generalise the "# set a value if it can only be in one location in the rule" to work with all subsets of a rule
+    - subtract rule 1 from rule 2 if rule 1 is a subset of rule 2
+    - try removing add_value and replacing it with a smarter remove_possibilities
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
         this would allow calls inside add_value and remove_possibility
@@ -262,6 +264,7 @@ def solver(board, rules, rule_memberships):
             # If a subset of a rule contains as many possibilities as the size of the subset
             # then all the possibilities in the subset can be removed from every part of the
             # rule not in the subset
+            # this is a generalisation of the deduction "set a value if it can only be in one location in the rule"
             if rule[2]:
                 for subset in rule:
                     possibilities = union(subset)

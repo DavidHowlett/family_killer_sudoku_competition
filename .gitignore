@@ -1,5 +1,6 @@
 *.pyc
 .idea
+junk.py
 __pycache__/*
 results cache/*
 !results cache/placeholder.txt
