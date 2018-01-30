@@ -12,6 +12,8 @@ ToDo:
     - simplify the setup code using the 'to process' variable instead of smart initialisation
     - generalise the "# set a value if it can only be in one location in the rule" to work with all subsets of a rule
     - subtract rule 1 from rule 2 if rule 1 is a subset of rule 2
+    - if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
+        then remove "5" from all locations in rule B not in the overlap
     - try removing add_value and replacing it with a smarter remove_possibilities
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
@@ -31,6 +33,8 @@ David 2 took 0.0311 seconds and 54 bad guesses to run grandad slow problem
 David 2 took a total of 7.388 seconds and 13877 bad guesses. Each bad guess took 0.532 milliseconds on average
 if a rule must have a value and it can only be in one place then add the value
 David 2 took a total of 5.418 seconds and 3506 bad guesses. Each bad guess took 1.545 milliseconds on average
+removed add_value
+David 2 took a total of 5.210 seconds and 3506 bad guesses. Each bad guess took 1.486 milliseconds on average
 """
 import doctest
 
@@ -55,7 +59,7 @@ def union(xs):
 def print_board(board):
     """This prints a board in a human readable form with the solved squares and the possible values both shown.
     >>> board, rules, rule_memberships = setup(test_problem)
-    >>> add_value(board, rules, rule_memberships, 0, 256)
+    >>> remove_possibilities(board, rules, rule_memberships, 0, ~256)
     >>> print_board(board)
     9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
     . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
@@ -132,69 +136,21 @@ def main(problem):
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
-def add_value(board, rules, rule_memberships, loc, single_possibility):
-    """Given a board and a location set the value at the location and remove all numbers that are now impossible.
-    This function will change the given board and rules. It may raise a Contradiction.
-    Only call add_value on squares that don't have a value already.
-    >>> board, rules, rule_memberships = setup(test_problem)
-    >>> print_board(board)
-    . . . . . . . . .  |  320 320   5   5 495 495 504 504 511
-    . . . . . . . . .  |   15  15 511 511 480 119 119 511 511
-    . . . . . . . . .  |  510 504 504 511 480  15  15 504   5
-    . . . . . . . . .  |  510  27  27 511 511 510 495 504   5
-    . . . . . . . . .  |  255 255 320 119 511 510 495  63  63
-    . . . . . . . . .  |   63 119 320 119 511 511 255 255 480
-    . . . . . . . . .  |   63 119   5   5 119 511 432 432 480
-    . . . . . . . . .  |  511 511 432 432 119 511 511  63  63
-    . . . . . . . . .  |  511 384 384  63  63  63  63 504 504
-    <BLANKLINE>
-    <BLANKLINE>
-    >>> add_value(board, rules, rule_memberships, 0, 256)
-    >>> board[0]
-    256
-    >>> board[1]
-    64
-    >>> board[9] & 256
-    0
-    >>> print_board(board)
-    9 7 . . . . . . .  |  256  64   5   5 175 175 184 184 191
-    . . . . . . . . .  |   15  15 191 511 480 119 119 511 511
-    . . . . . . . . .  |  190 184 184 511 480  15  15 504   5
-    . . . . . . . . .  |  254  27  27 511 511 510 495 504   5
-    . . . . . . . . .  |  255 191 320 119 511 510 495  63  63
-    . . . . . . . . .  |   63  55 320 119 511 511 255 255 480
-    . . . . . . . . .  |   63  55   5   5 119 511 432 432 480
-    . . . . . . . . .  |  255 447 432 432 119 511 511  63  63
-    . . . . . . . . .  |  255 384 384  63  63  63  63 504 504
-    <BLANKLINE>
-    <BLANKLINE>
-    """
-    global add_value_calls
-    assert 0 <= loc < 81
-    assert single_possibility in {1, 2, 4, 8, 16, 32, 64, 128, 256}
-    assert single_possibility != board[loc]
-    add_value_calls += 1
-    # set the current square
-    remove_possibilities(board, rules, rule_memberships, loc, ~single_possibility, False)
-    # we now know that the value in the current square can't be found in any of the neighbors
-    for rule in rule_memberships[loc]:
-        for loc2 in rule['locs']:
-            # only do the work to remove a value if the value is currently considered possible
-            if loc2 != loc and single_possibility & board[loc2]:
-                remove_possibilities(board, rules, rule_memberships, loc2, single_possibility, True)
-        # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
-
-
-def remove_possibilities(board, rules, rule_memberships, loc, possibilities, recurse):
+def remove_possibilities(board, rules, rule_memberships, loc, possibilities):
     """This takes a board and removes a collection of possibilities from a single square."""
     if not possibilities & board[loc]:
         # if there is no overlap between the current possibilities and the possibilities to remove then return early
         return
     new_possibilities = (~possibilities) & board[loc]
-    if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256} and recurse:
-        add_value(board, rules, rule_memberships, loc, new_possibilities)
-    else:
-        board[loc] = new_possibilities
+    board[loc] = new_possibilities
+    if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+        # we now know that the value in the current square can't be found in any of the neighbors
+        for rule in rule_memberships[loc]:
+            for loc2 in rule['locs']:
+                # only do the work to remove a value if the value is currently considered possible
+                if loc2 != loc and new_possibilities & board[loc2]:
+                    remove_possibilities(board, rules, rule_memberships, loc2, new_possibilities)
+            # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
     if board[loc] == 0:
         raise Contradiction
     for rule in rule_memberships[loc]:
@@ -232,7 +188,7 @@ def solver(board, rules, rule_memberships):
             banned_values = ~union(rule['combos'])
             for loc in rule['locs']:
                 if board[loc] & banned_values:
-                    remove_possibilities(board, rules, rule_memberships, loc, banned_values, True)
+                    remove_possibilities(board, rules, rule_memberships, loc, banned_values)
 
             # set a value if it can only be in one location in the rule
             for loc in rule['locs']:
@@ -251,7 +207,7 @@ def solver(board, rules, rule_memberships):
                         pass
                     elif must_be_in_current_square in {0, 1, 2, 4, 8, 16, 32, 64, 128, 256}:
                         if must_be_in_current_square & board[loc]:
-                            add_value(board, rules, rule_memberships, loc, must_be_in_current_square)
+                            remove_possibilities(board, rules, rule_memberships, loc, ~must_be_in_current_square)
                             progress_made = True
                         else:
                             # the current square must contain the value that must be present
@@ -302,7 +258,7 @@ def solver(board, rules, rule_memberships):
             for loc in rule['locs']:
                 possible_rule_memberships[loc].append(rule)
         try:
-            add_value(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, possibility)
+            remove_possibilities(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, ~possibility)
             return solver(possible_board, possible_rules, possible_rule_memberships)
         except Contradiction:
             # then that particular guess is wrong
