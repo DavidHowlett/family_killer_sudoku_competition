@@ -10,7 +10,7 @@ import michael_solver
 
 solvers = [
     ('Robert', robert_solver),
-    # ('Dad', dad_solver),
+    ('Dad', dad_solver),
     ('Michael', michael_solver),
     ('David 1', david_1_solver),
     ('David 2', david_2_solver),
@@ -32,10 +32,13 @@ if __name__ == '__main__':
                 run_time = float(file.readline())
                 bad_guesses = int(file.readline())
                 result = eval(file.readline())
-            except (FileNotFoundError, ValueError):
+            except (FileNotFoundError, ValueError, SyntaxError):
                 # in the event that the lookup fails actually run the test
                 start_time = time.process_time()
-                result, bad_guesses = solver.main(problem)
+                try:
+                    result, bad_guesses = solver.main(problem)
+                except Exception as e:
+                    result, bad_guesses = e, 999
                 run_time = time.process_time()-start_time
                 open(file_name, 'w').write(f'{run_time}\n{bad_guesses}\n{result}')
             # print(result)
