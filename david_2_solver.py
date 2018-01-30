@@ -8,7 +8,6 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - start using the 'to process' variable
     - simplify the setup code using the 'to process' variable instead of smart initialisation
     - generalise the "# set a value if it can only be in one location in the rule" to work with all subsets of a rule
     - subtract rule 1 from rule 2 if rule 1 is a subset of rule 2
@@ -18,6 +17,7 @@ ToDo:
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
         this would allow calls inside add_value and remove_possibility
+    - replace rule_memberships with "friends"
     - understand robert's code
 
 
@@ -35,6 +35,8 @@ if a rule must have a value and it can only be in one place then add the value
 David 2 took a total of 5.418 seconds and 3506 bad guesses. Each bad guess took 1.545 milliseconds on average
 removed add_value
 David 2 took a total of 5.210 seconds and 3506 bad guesses. Each bad guess took 1.486 milliseconds on average
+added "to process" variable
+David 2 took a total of 3.181 seconds and 3506 bad guesses. Each bad guess took 0.907 milliseconds on average
 """
 import doctest
 
@@ -154,10 +156,12 @@ def remove_possibilities(board, rules, rule_memberships, loc, possibilities):
     if board[loc] == 0:
         raise Contradiction
     for rule in rule_memberships[loc]:
+        rule['to process'] = True
         new_combos = [combo for combo in rule['combos'] if combo & board[loc]]
         if not new_combos:
             raise Contradiction
         rule['combos'] = new_combos
+        # todo use reduced combos to exclude more possibilities
 
 
 def solver(board, rules, rule_memberships):
@@ -175,6 +179,9 @@ def solver(board, rules, rule_memberships):
     while progress_made:
         progress_made = False
         for rule in rules:
+            if not rule['to process']:
+                continue
+            rule['to process'] = False
             # remove combos if they need values that are not present
             banned_values = ~union(board[loc] for loc in rule['locs'])
             new_combos = [combo for combo in rule['combos'] if not (combo & banned_values)]
