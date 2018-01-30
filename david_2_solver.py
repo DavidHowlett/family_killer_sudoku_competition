@@ -8,6 +8,7 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
+    - try removing add_value and replacing it with a smarter remove_possibilities
     - start using the 'to process' variable
     - subtract rule 1 from rule 2 if rule 1 is in rule 2
     - experiment with "process rule" being a callable function,
@@ -25,6 +26,9 @@ replaced functions with lookups
 David 2 took 0.0897 seconds and 350 bad guesses to run grandad slow problem
 added deductions using combos
 David 2 took 0.0311 seconds and 54 bad guesses to run grandad slow problem
+David 2 took a total of 7.388 seconds and 13877 bad guesses. Each bad guess took 0.532 milliseconds on average
+if a rule must have a value and it can only be in one place then add the value
+David 2 took a total of 5.418 seconds and 3506 bad guesses. Each bad guess took 1.545 milliseconds on average
 """
 import doctest
 
@@ -214,7 +218,6 @@ def solver(board, rules, rule_memberships):
         progress_made = False
         for rule in rules:
             # remove combos if they need values that are not present
-            # this is implemented in a simple way, more possibilities could be excluded
             banned_values = ~union(board[loc] for loc in rule['locs'])
             new_combos = [combo for combo in rule['combos'] if not (combo & banned_values)]
             if not new_combos:
@@ -229,23 +232,32 @@ def solver(board, rules, rule_memberships):
                 if board[loc] & banned_values:
                     remove_possibilities(board, rules, rule_memberships, loc, banned_values, True)
 
-            '''
+            # set a value if it can only be in one location in the rule
             for loc in rule['locs']:
-                # don't bother looking at squares that already known
+                # don't bother looking at squares that are already known
                 if board[loc] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                    required_digits = 511
+                    for combo in rule['combos']:
+                        required_digits &= combo
                     found_digits = 0
-                    for loc2 in group:
+                    for loc2 in rule['locs']:
                         if loc2 != loc:
-                            found_digits = found_digits | board[loc2]
-                    digits_unaccounted_for = 511 ^ found_digits
-                    if digits_unaccounted_for:
-                        if digits_unaccounted_for not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                            found_digits |= board[loc2]
+                    must_be_in_current_square = required_digits & ~ found_digits
+                    if not must_be_in_current_square:
+                        # most of the time this constraint yields nothing of use
+                        pass
+                    elif must_be_in_current_square in {0, 1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                        if must_be_in_current_square & board[loc]:
+                            add_value(board, rules, rule_memberships, loc, must_be_in_current_square)
+                            progress_made = True
+                        else:
+                            # the current square must contain the value that must be present
                             raise Contradiction
-                        if not digits_unaccounted_for & board[loc]:
-                            raise Contradiction
-                        add_value(board, rules, loc, digits_unaccounted_for)
-                        progress_made = True
-            '''
+                    else:
+                        # if more then one value must be in the current square then something has gone wrong.
+                        raise Contradiction
+
             '''
             # If a subset of a rule contains as many possibilities as the size of the subset
             # then all the possibilities in the subset can be removed from every part of the
