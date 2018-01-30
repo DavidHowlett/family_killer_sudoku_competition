@@ -132,15 +132,19 @@ board=[511]*81  #given a digit count and decimal number, what bits _might_ be us
 
 
 def main(problem):
+    # Load the cage data into the linear board
     for cage in problem:
-        print("Cage total= ",cage[0], end='')
-        for cells in cage[1]:
-            print(',', cells, end='')
+        print("Cage total= ", cage[0], end='')
+        binary = decimaltobinary[cage[0]]      # This is the list of possible binary bits
+        for cells in cage[1]:                # For each cell in the cage
+            x = cells[0]
+            y = cells[1]
+            board[x+y*9] = binary              # Restrict the bits according to the pattern outlined above.
+            print(', x=', x, ', y=', y, end='')
         print("")
-    print_board(board)     #Show the board after setup
-    result=[1]*81
-    bad_guess_count=982347392487329
-    return result, bad_guess_count
+    print_board(board)                       # Show the board after setup. This should be much simpler than before
+    bad_guess_count=987654321  # An appropriate number of glitches!
+    return board, bad_guess_count
 
 #The cage data is loaded from problems.py above, as an import. Now process it...
 #for problemno in problems.problems[0]
@@ -149,4 +153,7 @@ def main(problem):
 #  print(problems[problemno][cage])
 
 
-
+if __name__ == '__main__':
+    import problems
+    test_problem = problems.problems[0][1]
+    print(main(test_problem))

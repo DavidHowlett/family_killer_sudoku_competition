@@ -9,8 +9,8 @@ import robert_solver
 import michael_solver
 
 solvers = [
-    ('Robert' , robert_solver ),
-    ('Dad'    , dad_solver    ),
+    ('Robert', robert_solver),
+    # ('Dad', dad_solver),
     ('Michael', michael_solver),
     ('David 1', david_1_solver),
     ('David 2', david_2_solver),
