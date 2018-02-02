@@ -8,10 +8,10 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - generalise the "# set a value if it can only be in one location in the rule" to work with all subsets of a rule
-    - subtract rule 1 from rule 2 if rule 1 is a subset of rule 2
-    - if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
-        then remove "5" from all locations in rule B not in the overlap
+    - move all combo removals to a dedicated function.
+    - every time the combos are reduced, check if there are 0 combos left and raise a Contradiciton
+    - every time the possibilities are reduced, check if there are 0 possibilities left and raise a Contradiction
+    - when the board gets solved, notice earlier
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
         this would allow calls inside add_value and remove_possibility
@@ -35,8 +35,10 @@ removed add_value
 David 2 took a total of 5.210 seconds and 3506 bad guesses. Each bad guess took 1.486 milliseconds on average
 added "to process" variable
 David 2 took a total of 3.181 seconds and 3506 bad guesses. Each bad guess took 0.907 milliseconds on average
-added checks on all subsets of all rules
+added checks on all subsets of all rules (this was then reverted)
 David 2 took a total of 42.416 seconds and 1873 bad guesses. Each bad guess took 22.646 milliseconds on average
+subtract a rule if it is a subset
+David 2 took a total of 2.647 seconds and 1992 bad guesses. Each bad guess took 1.329 milliseconds on average
 """
 import doctest
 import itertools
@@ -117,7 +119,7 @@ def setup(problem):
     rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
              for total, section in problem]
     # convert the static rules to my format
-    rules += [{'locs': locs, 'combos': {511}, 'to process': True}
+    rules += [{'locs': locs.copy(), 'combos': {511}, 'to process': True}
               for locs in rows + cols + boxes]
     # I need to know which groups each square is a member of
     rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
@@ -173,7 +175,6 @@ def solver(board, rules, rule_memberships):
     # print_board(board)
     # check if this leaves a group of 9 where a number can only be in one location
     # this is computationally expensive because I need to find a large number of unions
-    # print_board(board)
     progress_made = True
     while progress_made:
         progress_made = False
@@ -238,7 +239,31 @@ def solver(board, rules, rule_memberships):
                             if loc not in subset:
                                 remove_possibilities(board, rules, rule_memberships, loc, possibilities)
             '''
+            # subtract rule 1 from rule 2 if rule 1 is a subset of rule 2 and rule 1 only has one combo
+            if len(rule['combos']) == 1:
+                # assert len(rule['locs']) != 1
+                subset_combo = next(iter(rule['combos']))
+                for rule2 in rules:
+                    if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
+                        if not rule2['combos']:
+                            raise Contradiction  # this stops the below code breaking
+                        rule2['locs'] -= rule['locs']
+                        tmp = set()
+                        for superset_combo in rule2['combos']:
+                            if not (subset_combo & ~superset_combo):
+                                tmp.add(superset_combo)
+                        rule2['combos'] = {superset_combo & ~subset_combo for superset_combo in tmp}
+                        for loc in rule['locs']:
+                            rule_memberships[loc].remove(rule2)
+                        progress_made = True
+                        # if len(rule2['locs']) < 2: todo
+                        #    remove the rule
 
+
+            # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
+            # then remove "5" from all locations in rule B not in the overlap
+        # todo remove rules that have the same locs
+        # todo remove rules that have no locs
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -262,6 +287,7 @@ def solver(board, rules, rule_memberships):
         for rule in rules:
             rule = rule.copy()
             rule['combos'] = rule['combos'].copy()
+            rule['locs'] = rule['locs'].copy()
             possible_rules.append(rule)
             for loc in rule['locs']:
                 possible_rule_memberships[loc].append(rule)
@@ -293,6 +319,7 @@ assert val_to_set[4] == 8
 
 pop_count = [bin(x).count('1') for x in range(512)]
 set_to_list = [[i+1 for i in range(9) if j & 1 << i] for j in range(512)]
+set_to_total = [sum(set_to_list[i]) for i in range(512)]
 bad_guesses = 0
 rows = [{col+row*9 for col in range(9)} for row in range(9)]
 cols = [{col+row*9 for row in range(9)} for col in range(9)]
@@ -302,16 +329,18 @@ boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3
 # then group them by number of squares in the section and the sum of all the values in the section
 # this looks like combo[length][total]
 combos = [[[possible_section for possible_section in range(512)
-            if pop_count[possible_section] == length and sum(set_to_list[possible_section]) == total]
+            if pop_count[possible_section] == length and set_to_total[possible_section] == total]
            for total in range(46)] for length in range(9)]
 assert combos[2][3] == [3]
-# a section that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
+# a rule that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
 assert combos[2][5] == [6, 9]
+# a rule that is 3 long which sums to 20 should actually sum to 20
+assert set_to_total[next(iter(combos[3][20]))] == 20
 
 if __name__ == '__main__':
     import problems
     test_problem = problems.problems[0][1]
-    doctest.testmod()
+    # doctest.testmod()
     test_board, test_rules, test_rule_memberships = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships)
     print(bad_guesses, test_solved_board)
