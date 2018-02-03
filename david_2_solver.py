@@ -43,6 +43,8 @@ created remove_combos function
 David 2 took a total of 2.568 seconds and 1992 bad guesses. Each bad guess took 1.289 milliseconds on average
 remove_combos now removes possibilities from the board
 David 2 took a total of 2.337 seconds and 2002 bad guesses. Each bad guess took 1.168 milliseconds on average
+micro optimisation
+David 2 took a total of 2.295 seconds and 2002 bad guesses. Each bad guess took 1.147 milliseconds on average
 """
 import doctest
 
@@ -255,24 +257,21 @@ def solver(board, rules, rule_memberships):
                 subset_combo = next(iter(rule['combos']))
                 for rule2 in rules:
                     if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
-                        if not rule2['combos']:
-                            raise Contradiction  # this stops the below code breaking
                         rule2['locs'] -= rule['locs']
-                        tmp = set()
-                        for superset_combo in rule2['combos']:
-                            if not (subset_combo & ~superset_combo):
-                                tmp.add(superset_combo)
-                        rule2['combos'] = {superset_combo & ~subset_combo for superset_combo in tmp}
+                        rule2['combos'] = {
+                            superset_combo & ~subset_combo
+                            for superset_combo in rule2['combos'] if not (subset_combo & ~superset_combo)}
                         for loc in rule['locs']:
                             rule_memberships[loc].remove(rule2)
                         progress_made = True
                         if len(rule2['locs']) < 2:
+                            # if len(rule2['locs']) == 1:
+                            #    assert pop_count[board[next(iter(rule2['locs']))]] == 1
                             rules.remove(rule2)
+            # assert len(rule['locs']) > 1
 
             # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
             # then remove "5" from all locations in rule B not in the overlap
-        # todo remove rules that have the same locs
-        # todo remove rules that have no locs
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
