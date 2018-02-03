@@ -39,9 +39,12 @@ added checks on all subsets of all rules (this was then reverted)
 David 2 took a total of 42.416 seconds and 1873 bad guesses. Each bad guess took 22.646 milliseconds on average
 subtract a rule if it is a subset
 David 2 took a total of 2.647 seconds and 1992 bad guesses. Each bad guess took 1.329 milliseconds on average
+created remove_combos function
+David 2 took a total of 2.568 seconds and 1992 bad guesses. Each bad guess took 1.289 milliseconds on average
+remove_combos now removes possibilities from the board
+David 2 took a total of 2.337 seconds and 2002 bad guesses. Each bad guess took 1.168 milliseconds on average
 """
 import doctest
-import itertools
 
 
 class Contradiction(Exception):
@@ -116,7 +119,8 @@ def setup(problem):
     global bad_guesses
     bad_guesses = 0
     # convert the problem specific rules to my format
-    rules = [{'locs': {x + y * 9 for x, y in section}, 'combos': combos[len(section)][total], 'to process': True}
+    rules = [{'locs': {x + y * 9 for x, y in section},
+              'combos': combos_by_len_and_total[len(section)][total].copy(), 'to process': True}
              for total, section in problem]
     # convert the static rules to my format
     rules += [{'locs': locs.copy(), 'combos': {511}, 'to process': True}
@@ -158,11 +162,21 @@ def remove_possibilities(board, rules, rule_memberships, loc, possibilities):
         raise Contradiction
     for rule in rule_memberships[loc]:
         rule['to process'] = True
-        new_combos = [combo for combo in rule['combos'] if combo & board[loc]]
-        if not new_combos:
-            raise Contradiction
-        rule['combos'] = new_combos
-        # todo use reduced combos to exclude more possibilities
+        remove_combos(board, rules, rule_memberships, rule,
+                      [combo for combo in rule['combos'] if not (combo & board[loc])])
+
+
+def remove_combos(board, rules, rule_memberships, rule, combos_to_remove):
+    """This takes a rule, removes a combo from it and then does the appropriate other removals"""
+    if not combos_to_remove:
+        return
+    for combo in combos_to_remove:
+        rule['combos'].remove(combo)
+    if not rule['combos']:
+        raise Contradiction
+    possibilities = union(rule['combos'])
+    for loc in rule['locs']:
+        remove_possibilities(board, rules, rule_memberships, loc, board[loc] & ~possibilities)
 
 
 def solver(board, rules, rule_memberships):
@@ -184,19 +198,15 @@ def solver(board, rules, rule_memberships):
             rule['to process'] = False
             # remove combos if they need values that are not present
             banned_values = ~union(board[loc] for loc in rule['locs'])
-            new_combos = [combo for combo in rule['combos'] if not (combo & banned_values)]
-            if not new_combos:
-                raise Contradiction
-            if new_combos != rule['combos']:
-                progress_made = True
-                rule['combos'] = new_combos
+            remove_combos(board, rules, rule_memberships, rule,
+                          [combo for combo in rule['combos'] if combo & banned_values])
 
             # remove values from squares if they are not in any combo
             banned_values = ~union(rule['combos'])
             for loc in rule['locs']:
                 if board[loc] & banned_values:
                     remove_possibilities(board, rules, rule_memberships, loc, banned_values)
-            # '''
+
             # set a value if it can only be in one location in the rule
             for loc in rule['locs']:
                 # don't bother looking at squares that are already known
@@ -256,9 +266,8 @@ def solver(board, rules, rule_memberships):
                         for loc in rule['locs']:
                             rule_memberships[loc].remove(rule2)
                         progress_made = True
-                        # if len(rule2['locs']) < 2: todo
-                        #    remove the rule
-
+                        if len(rule2['locs']) < 2:
+                            rules.remove(rule2)
 
             # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
             # then remove "5" from all locations in rule B not in the overlap
@@ -328,14 +337,14 @@ boxes = [{col+row*9+box_col*3+box_row*3*9 for row in range(3) for col in range(3
 # combos contains every possible collection of the digits 1-9
 # then group them by number of squares in the section and the sum of all the values in the section
 # this looks like combo[length][total]
-combos = [[[possible_section for possible_section in range(512)
-            if pop_count[possible_section] == length and set_to_total[possible_section] == total]
-           for total in range(46)] for length in range(9)]
-assert combos[2][3] == [3]
+combos_by_len_and_total = [[[possible_section for possible_section in range(512)
+                             if pop_count[possible_section] == length and set_to_total[possible_section] == total]
+                            for total in range(46)] for length in range(9)]
+assert combos_by_len_and_total[2][3] == [3]
 # a rule that is 2 long and sums to 5 has 2 possibilities [1,4] and [2,3] these are represented as 9 and 6
-assert combos[2][5] == [6, 9]
+assert combos_by_len_and_total[2][5] == [6, 9]
 # a rule that is 3 long which sums to 20 should actually sum to 20
-assert set_to_total[next(iter(combos[3][20]))] == 20
+assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 
 if __name__ == '__main__':
     import problems
