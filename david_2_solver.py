@@ -8,8 +8,10 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - move all combo removals to a dedicated function.
-    - every time the combos are reduced, check if there are 0 combos left and raise a Contradiciton
+    - when a square becomes known remove that square from the rules. This can be done by
+        - store the locs in a set and make lots of copies to deal with the removal during itteration
+        - only remove locs from sets in the outer loop of solver (this sidesteps removal while iterateing)
+        - make locs a list and write clever, fast code to do sub setting
     - every time the possibilities are reduced, check if there are 0 possibilities left and raise a Contradiction
     - when the board gets solved, notice earlier
     - experiment with "process rule" being a callable function,
@@ -155,11 +157,14 @@ def remove_possibilities(board, rules, rule_memberships, loc, possibilities):
     if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
         # we now know that the value in the current square can't be found in any of the neighbors
         for rule in rule_memberships[loc]:
+            # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
+            # rule['locs'].remove(loc)
+            # rule['combos'] = [combo ^ new_possibilities for combo in rule['combos'] if combo & new_possibilities]
             for loc2 in rule['locs']:
                 # only do the work to remove a value if the value is currently considered possible
                 if loc2 != loc and new_possibilities & board[loc2]:
                     remove_possibilities(board, rules, rule_memberships, loc2, new_possibilities)
-            # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
+            # todo remove the rule if it gets too small
     if board[loc] == 0:
         raise Contradiction
     for rule in rule_memberships[loc]:
@@ -194,6 +199,15 @@ def solver(board, rules, rule_memberships):
     progress_made = True
     while progress_made:
         progress_made = False
+        # check for known values that are still in a rule, this should speed things up.
+        '''
+        for loc in range(81):
+            if rule_memberships[loc] and board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                for rule in rule_memberships[loc]:
+                    rule['locs'].remove(loc)
+                    rule['combos'] = [combo & ~board[loc] for combo in rule['combos'] if combo & board[loc]]
+                rule_memberships[loc] = []
+        '''
         for rule in rules:
             if not rule['to process']:
                 continue
@@ -203,8 +217,8 @@ def solver(board, rules, rule_memberships):
             remove_combos(board, rules, rule_memberships, rule,
                           [combo for combo in rule['combos'] if combo & banned_values])
 
-            # remove values from squares if they are not in any combo
             banned_values = ~union(rule['combos'])
+            # remove values from squares if they are not in any combo
             for loc in rule['locs']:
                 if board[loc] & banned_values:
                     remove_possibilities(board, rules, rule_memberships, loc, banned_values)
@@ -258,15 +272,16 @@ def solver(board, rules, rule_memberships):
                 for rule2 in rules:
                     if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
                         rule2['locs'] -= rule['locs']
-                        rule2['combos'] = {
+                        rule2['combos'] = [
                             superset_combo & ~subset_combo
-                            for superset_combo in rule2['combos'] if not (subset_combo & ~superset_combo)}
+                            for superset_combo in rule2['combos'] if not (subset_combo & ~superset_combo)]
                         for loc in rule['locs']:
                             rule_memberships[loc].remove(rule2)
                         progress_made = True
                         if len(rule2['locs']) < 2:
-                            # if len(rule2['locs']) == 1:
-                            #    assert pop_count[board[next(iter(rule2['locs']))]] == 1
+                            if len(rule2['locs']) == 1:
+                                # assert pop_count[board[next(iter(rule2['locs']))]] == 1
+                                rule_memberships[next(iter(rule2['locs']))].remove(rule2)
                             rules.remove(rule2)
             # assert len(rule['locs']) > 1
 
