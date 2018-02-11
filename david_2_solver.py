@@ -8,8 +8,9 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
+    - use rule['to process'] = True more
     - make a data structure for the rule overlaps that is incrementally updated
-    - use the data structure 
+    - use the data structure
     - exclude more values within a rule based on constraints from the combos and the current possibilities
     - when the board gets solved, notice earlier
     - experiment with "process rule" being a callable function,
@@ -47,6 +48,12 @@ micro optimisation
 David 2 took a total of 2.295 seconds and 2002 bad guesses. Each bad guess took 1.147 milliseconds on average
 built machinery to calculate rule overlaps
 David 2 took a total of 2.640 seconds and 1992 bad guesses. Each bad guess took 1.325 milliseconds on average
+moved deductions 1-3 to their own functions and ditched progress_made
+David 2 took a total of 2.630 seconds and 1992 bad guesses. Each bad guess took 1.320 milliseconds on average
+enabled deduction 4
+David 2 took a total of 2.485 seconds and 2029 bad guesses. Each bad guess took 1.225 milliseconds on average
+moved deduction 5 and 6
+David 2 took a total of 2.570 seconds and 2029 bad guesses. Each bad guess took 1.267 milliseconds on average
 """
 import doctest
 import itertools
@@ -225,6 +232,108 @@ def remove_combos(board, rules, rule_memberships, rule, combos_to_remove):
         remove_possibilities(board, rules, rule_memberships, loc, board[loc] & ~possibilities)
 
 
+def deduction1(board, rules, rule_memberships, rule):
+    """Remove combos if they need values that are not present"""
+    banned_values = ~union(board[loc] for loc in rule['locs'])
+    remove_combos(board, rules, rule_memberships, rule, [combo for combo in rule['combos'] if combo & banned_values])
+
+
+def deduction2(board, rules, rule_memberships, rule):
+    """Remove values from squares if they are not in any combo"""
+    banned_values = ~union(rule['combos'])
+    for loc in rule['locs']:
+        if board[loc] & banned_values:
+            remove_possibilities(board, rules, rule_memberships, loc, banned_values)
+
+
+def deduction3(board, rules, rule_memberships, rule):
+    """set a value if it can only be in one location in the rule"""
+    for loc in rule['locs']:
+        # don't bother looking at squares that are already known
+        if board[loc] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+            required_digits = 511
+            for combo in rule['combos']:
+                required_digits &= combo
+            found_digits = 0
+            for loc2 in rule['locs']:
+                if loc2 != loc:
+                    found_digits |= board[loc2]
+            must_be_in_current_square = required_digits & ~ found_digits
+            if not must_be_in_current_square:
+                # most of the time this constraint yields nothing of use
+                pass
+            elif must_be_in_current_square in {0, 1, 2, 4, 8, 16, 32, 64, 128, 256}:
+                if must_be_in_current_square & board[loc]:
+                    remove_possibilities(board, rules, rule_memberships, loc, ~must_be_in_current_square)
+                else:
+                    # the current square must contain the value that must be present
+                    raise Contradiction
+            else:
+                # if more then one value must be in the current square then something has gone wrong.
+                raise Contradiction
+
+
+def deduction4(board, rules, rule_memberships):
+    """Remove known values from rules. This would ideally be done incrementally by the remove_possibilities function
+    but doing so would change the size of locs while locs were being iterated over"""
+    for loc in range(81):
+        if rule_memberships[loc] and board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
+            for rule in rule_memberships[loc]:
+                rule['locs'].remove(loc)
+                rule['combos'] = [combo & ~board[loc] for combo in rule['combos'] if combo & board[loc]]
+                if len(rule['locs']) < 2:
+                    if len(rule['locs']) == 1:
+                        # assert pop_count[board[next(iter(rule2['locs']))]] == 1
+                        rule_memberships[next(iter(rule['locs']))].remove(rule)
+                    rules.remove(rule)
+                else:
+                    rule['to process'] = True
+            rule_memberships[loc] = []
+
+
+def deduction5(board, rules, rule_memberships, rule):
+    """For every subset in the rule if the number of possibilities in the subset is the same size as the subset
+    then remove the possibilities from all parts of the rule not in the subset
+    this is a generalisation of the deduction "set a value if it can only be in one location in the rule" """
+    locs = rule['locs']
+    for subset_size in range(2, len(locs) - 1):
+        for subset in itertools.combinations(locs, subset_size):
+            possibilities = union(board[loc] for loc in subset)
+            number_of_possibilities = pop_count[possibilities]
+            if number_of_possibilities < len(subset):
+                raise Contradiction
+            elif number_of_possibilities == len(subset):
+                # then I can exclude lots of possibilities from the others locations in the rule
+                for loc in locs:
+                    if loc not in subset:
+                        remove_possibilities(board, rules, rule_memberships, loc, possibilities)
+
+
+def deduction6(rules, rule_memberships, rule):
+    """Subtract rule 1 from rule 2 if rule 1 is a subset of rule 2 and rule 1 only has one combo"""
+    if len(rule['combos']) == 1:
+        # assert len(rule['locs']) != 1
+        subset_combo = next(iter(rule['combos']))
+        # todo try using rule_memberships to make this go faster. I should not check very rule.
+        for rule2 in rules:
+            if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
+                rule2['locs'] -= rule['locs']
+                rule2['combos'] = [
+                    superset_combo & ~subset_combo
+                    for superset_combo in rule2['combos'] if not (subset_combo & ~superset_combo)]
+                for loc in rule['locs']:
+                    rule_memberships[loc].remove(rule2)
+                # progress_made = True
+                # If rule2 has 0 or 1 locations left it can be removed.
+                if len(rule2['locs']) < 2:
+                    if len(rule2['locs']) == 1:
+                        # assert pop_count[board[next(iter(rule2['locs']))]] == 1
+                        rule_memberships[next(iter(rule2['locs']))].remove(rule2)
+                    rules.remove(rule2)
+                else:
+                    rule2['to process'] = True
+
+
 def solver(board, rules, rule_memberships, rule_overlaps):
     """This solves an arbitrary board using deduction and when that fails, guessing solutions
     >>> board, rules, rule_memberships = setup(test_problem)
@@ -233,99 +342,19 @@ def solver(board, rules, rule_memberships, rule_overlaps):
     """
     global bad_guesses
     # print_board(board)
-    # check if this leaves a group of 9 where a number can only be in one location
-    # this is computationally expensive because I need to find a large number of unions
-    progress_made = True
-    while progress_made:
-        progress_made = False
-        '''
-        # check for known values that are still in a rule, this should speed things up.
-        for loc in range(81):
-            if rule_memberships[loc] and board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                for rule in rule_memberships[loc]:
-                    rule['locs'].remove(loc)
-                    rule['combos'] = [combo & ~board[loc] for combo in rule['combos'] if combo & board[loc]]
-                rule_memberships[loc] = []
-        '''
+    old_board = None
+    while old_board != board:  # run the deductions until progress stops
+        old_board = board.copy()
+        deduction4(board, rules, rule_memberships)
         for rule in rules:
             if not rule['to process']:
                 continue
             rule['to process'] = False
-            # remove combos if they need values that are not present
-            banned_values = ~union(board[loc] for loc in rule['locs'])
-            remove_combos(board, rules, rule_memberships, rule,
-                          [combo for combo in rule['combos'] if combo & banned_values])
-
-            banned_values = ~union(rule['combos'])
-            # remove values from squares if they are not in any combo
-            for loc in rule['locs']:
-                if board[loc] & banned_values:
-                    remove_possibilities(board, rules, rule_memberships, loc, banned_values)
-
-            # set a value if it can only be in one location in the rule
-            for loc in rule['locs']:
-                # don't bother looking at squares that are already known
-                if board[loc] not in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                    required_digits = 511
-                    for combo in rule['combos']:
-                        required_digits &= combo
-                    found_digits = 0
-                    for loc2 in rule['locs']:
-                        if loc2 != loc:
-                            found_digits |= board[loc2]
-                    must_be_in_current_square = required_digits & ~ found_digits
-                    if not must_be_in_current_square:
-                        # most of the time this constraint yields nothing of use
-                        pass
-                    elif must_be_in_current_square in {0, 1, 2, 4, 8, 16, 32, 64, 128, 256}:
-                        if must_be_in_current_square & board[loc]:
-                            remove_possibilities(board, rules, rule_memberships, loc, ~must_be_in_current_square)
-                            progress_made = True
-                        else:
-                            # the current square must contain the value that must be present
-                            raise Contradiction
-                    else:
-                        # if more then one value must be in the current square then something has gone wrong.
-                        raise Contradiction
-            '''
-            # for every subset in the rule if the number of possibilities in the subset is the same size as the subset
-            # then remove the possibilities from all parts of the rule not in the subset
-            # this is a generalisation of the deduction "set a value if it can only be in one location in the rule"
-            locs = rule['locs']
-            for subset_size in range(2, len(locs)-1):
-                for subset in itertools.combinations(locs, subset_size):
-                    possibilities = union(board[loc] for loc in subset)
-                    number_of_possibilities = pop_count[possibilities]
-                    if number_of_possibilities < len(subset):
-                        raise Contradiction
-                    elif number_of_possibilities == len(subset):
-                        # then I can exclude lots of possibilities from the others locations in the rule
-                        for loc in locs:
-                            if loc not in subset:
-                                remove_possibilities(board, rules, rule_memberships, loc, possibilities)
-            '''
-            # subtract rule 1 from rule 2 if rule 1 is a subset of rule 2 and rule 1 only has one combo
-            if len(rule['combos']) == 1:
-                # assert len(rule['locs']) != 1
-                subset_combo = next(iter(rule['combos']))
-                # todo try using rule_memberships to make this go faster. I should not check very rule.
-                for rule2 in rules:
-                    if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
-                        rule2['locs'] -= rule['locs']
-                        rule2['combos'] = [
-                            superset_combo & ~subset_combo
-                            for superset_combo in rule2['combos'] if not (subset_combo & ~superset_combo)]
-                        for loc in rule['locs']:
-                            rule_memberships[loc].remove(rule2)
-                        progress_made = True
-                        # If rule2 has 0 or 1 locations left it can be removed.
-                        if len(rule2['locs']) < 2:
-                            if len(rule2['locs']) == 1:
-                                # assert pop_count[board[next(iter(rule2['locs']))]] == 1
-                                rule_memberships[next(iter(rule2['locs']))].remove(rule2)
-                            rules.remove(rule2)
-                        else:
-                            rule2['to process'] = True
+            deduction1(board, rules, rule_memberships, rule)
+            deduction2(board, rules, rule_memberships, rule)
+            deduction3(board, rules, rule_memberships, rule)
+            # deduction5(board, rules, rule_memberships, rule)
+            deduction6(rules, rule_memberships, rule)
             assert len(rule['locs']) > 1
 
         '''
@@ -440,10 +469,6 @@ if __name__ == '__main__':
     start_time = time.perf_counter()
     for _ in range(1000):
         rule_overlaps_maker(test_rules)
-    print(time.perf_counter()- start_time)
-
-    start_time = time.perf_counter()
-    for _ in range(1000):
-        rule_overlaps_maker2(test_rule_memberships)
     print(time.perf_counter() - start_time)
+
 
