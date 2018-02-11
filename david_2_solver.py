@@ -7,9 +7,10 @@ For example if a square is 7 that means the square is one of [1, 2, 3]
 A possible combination of digits for a section is represented as the 1 bits in an integer.
 For example a combo of 7 that means the section contains [1, 2, 3]
 
-ToDo:]
+ToDo:
     - make a data structure for the rule overlaps that is incrementally updated
     - use the data structure
+    - turn on doctests
     - exclude more values within a rule based on constraints from the combos and the current possibilities
     - when the board gets solved, notice earlier
     - experiment with "process rule" being a callable function,
@@ -53,7 +54,7 @@ enabled deduction 4
 David 2 took a total of 2.485 seconds and 2029 bad guesses. Each bad guess took 1.225 milliseconds on average
 moved deduction 5 and 6
 David 2 took a total of 2.570 seconds and 2029 bad guesses. Each bad guess took 1.267 milliseconds on average
-added deduction 5
+added deduction 5 (later reversed)
 David 2 took a total of 8.801 seconds and 1710 bad guesses. Each bad guess took 5.146 milliseconds on average
 """
 import doctest
@@ -122,12 +123,6 @@ def rule_overlaps_maker(rules):
             intersection = rule1['locs'].intersection(rule2['locs'])
             if intersection:
                 rule_overlaps.append((intersection, rule1, rule2))
-    return rule_overlaps
-
-
-def rule_overlaps_maker2(rule_memberships):
-    """This finds the overlaps between all of the rules"""
-    rule_overlaps = []
     return rule_overlaps
 
 
@@ -204,14 +199,13 @@ def remove_possibilities(board, rules, rule_memberships, loc, possibilities):
     if new_possibilities in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
         # we now know that the value in the current square can't be found in any of the neighbors
         for rule in rule_memberships[loc]:
-            # todo remove the location from the rule at this point, also if the rule becomes empty then remove the rule
+            # ideally I would remove the loc from the rules at this point
             # rule['locs'].remove(loc)
             # rule['combos'] = [combo ^ new_possibilities for combo in rule['combos'] if combo & new_possibilities]
             for loc2 in rule['locs']:
                 # only do the work to remove a value if the value is currently considered possible
                 if loc2 != loc and new_possibilities & board[loc2]:
                     remove_possibilities(board, rules, rule_memberships, loc2, new_possibilities)
-            # todo remove the rule if it gets too small
     if board[loc] == 0:
         raise Contradiction
     for rule in rule_memberships[loc]:
@@ -295,7 +289,7 @@ def deduction4(board, rules, rule_memberships):
 def deduction5(board, rules, rule_memberships, rule):
     """For every subset in the rule if the number of possibilities in the subset is the same size as the subset
     then remove the possibilities from all parts of the rule not in the subset
-    this is a generalisation of the deduction "set a value if it can only be in one location in the rule" """
+    this is a generalisation of the deduction3 "set a value if it can only be in one location in the rule" """
     locs = rule['locs']
     for subset_size in range(2, len(locs) - 1):
         for subset in itertools.combinations(locs, subset_size):
@@ -339,6 +333,23 @@ def deduction6(rules, rule_memberships, rule):
                     rule2['to process'] = True
 
 
+def deduction7(board, rules, rule_memberships, rule_overlaps):
+    """If rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
+    then remove "5" from all locations in rule B not in the overlap"""
+    rule_overlaps = rule_overlaps_maker(rules)  # todo remove this
+    consistency_check(rules, rule_memberships, rule_overlaps)
+    # for subset_size in range(2, len(locs)-1):
+    for rule1, rule2, overlap in rule_overlaps:
+        must_be_in_rule = 511
+        for combo in rule1['combos']:
+            must_be_in_rule &= combo
+        locs = rule1['locs']
+        for subset_size in range(3, len(locs)-2):
+            for rule1_subset in itertools.combinations(locs, subset_size):
+                could_be_outside_subset = union(board[loc] for loc in locs if loc not in rule1_subset)
+                # print(must_be_in_rule & ~could_be_outside_subset)
+
+
 def solver(board, rules, rule_memberships, rule_overlaps):
     """This solves an arbitrary board using deduction and when that fails, guessing solutions
     >>> board, rules, rule_memberships = setup(test_problem)
@@ -359,25 +370,11 @@ def solver(board, rules, rule_memberships, rule_overlaps):
             deduction1(board, rules, rule_memberships, rule)
             deduction2(board, rules, rule_memberships, rule)
             deduction3(board, rules, rule_memberships, rule)
+            # deduction5(board, rules, rule_memberships, rule)
             deduction6(rules, rule_memberships, rule)
             assert len(rule['locs']) > 1
+        # deduction7(board, rules, rule_memberships, rule_overlaps)
 
-        '''
-        # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
-        # then remove "5" from all locations in rule B not in the overlap
-        rule_overlaps = rule_overlaps_maker(rules)  # todo remove this
-        consistency_check(rules, rule_memberships, rule_overlaps)
-        # for subset_size in range(2, len(locs)-1):
-        for rule1, rule2, overlap in rule_overlaps:
-            must_be_in_rule = 511
-            for combo in rule1['combos']:
-                must_be_in_rule &= combo
-            locs = rule1['locs']
-            for subset_size in range(3, len(locs)-2):
-                for rule1_subset in itertools.combinations(locs, subset_size):
-                    could_be_outside_subset = union(board[loc] for loc in locs if loc not in rule1_subset)
-                    # print(must_be_in_rule & ~could_be_outside_subset)
-        '''
 
         '''
         for every rule1_subset in rule:
@@ -386,8 +383,6 @@ def solver(board, rules, rule_memberships, rule_overlaps):
                     remove the numbers from every square of rule2 not in rule1_subset
 
         '''
-    # for rule in rules:
-    #    deduction5(board, rules, rule_memberships, rule)
 
     loc_to_guess = None
     min_possibility_count = 999
@@ -474,8 +469,6 @@ if __name__ == '__main__':
     print(bad_guesses, test_solved_board)
 
     start_time = time.perf_counter()
-    for _ in range(1000):
+    for _ in range(100):
         rule_overlaps_maker(test_rules)
     print(time.perf_counter() - start_time)
-
-
