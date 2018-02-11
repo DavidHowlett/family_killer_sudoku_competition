@@ -8,11 +8,9 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - when a square becomes known remove that square from the rules. This can be done by
-        - store the locs in a set and make lots of copies to deal with the removal during itteration
-        - only remove locs from sets in the outer loop of solver (this sidesteps removal while iterateing)
-        - make locs a list and write clever, fast code to do sub setting
-    - every time the possibilities are reduced, check if there are 0 possibilities left and raise a Contradiction
+    - make a data structure for the rule overlaps that is incrementally updated
+    - use the data structure 
+    - exclude more values within a rule based on constraints from the combos and the current possibilities
     - when the board gets solved, notice earlier
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
@@ -47,8 +45,11 @@ remove_combos now removes possibilities from the board
 David 2 took a total of 2.337 seconds and 2002 bad guesses. Each bad guess took 1.168 milliseconds on average
 micro optimisation
 David 2 took a total of 2.295 seconds and 2002 bad guesses. Each bad guess took 1.147 milliseconds on average
+built machinery to calculate rule overlaps
+David 2 took a total of 2.640 seconds and 1992 bad guesses. Each bad guess took 1.325 milliseconds on average
 """
 import doctest
+import itertools
 
 
 class Contradiction(Exception):
@@ -104,6 +105,36 @@ def print_board(board):
     print(to_print)
 
 
+def rule_overlaps_maker(rules):
+    """This finds the overlaps between all of the rules"""
+    # todo try to make this run faster by starting with rule_overlaps rather then rules O(n^2) -> O(n)
+    rule_overlaps = []
+    for i, rule1 in enumerate(rules):
+        for rule2 in rules[:i]:
+            intersection = rule1['locs'].intersection(rule2['locs'])
+            if intersection:
+                rule_overlaps.append((intersection, rule1, rule2))
+    return rule_overlaps
+
+
+def rule_overlaps_maker2(rule_memberships):
+    """This finds the overlaps between all of the rules"""
+    rule_overlaps = []
+    return rule_overlaps
+
+
+def consistency_check(rules, rule_memberships, rule_overlaps):
+    # all the rules should be listed in rule_memberships
+    for rule in rules:
+        for loc in rule['locs']:
+            assert rule in rule_memberships[loc]
+    # all the rule_memberships should be listed in rules
+    for loc in range(81):
+        for rule in rule_memberships[loc]:
+            assert loc in rule['locs']
+    assert rule_overlaps == rule_overlaps_maker(rules)
+
+
 def setup(problem):
     """
     >>> board, rules, rule_memberships = setup(test_problem)
@@ -131,19 +162,27 @@ def setup(problem):
               for locs in rows + cols + boxes]
     # I need to know which groups each square is a member of
     rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
+    # it makes some of the logic faster to pre compute the overlaps between the rules
+    rule_overlaps = []
+    for i, rule1 in enumerate(rules):
+        for rule2 in rules[:i]:
+            intersection = rule1['locs'].intersection(rule2['locs'])
+            if intersection:
+                rule_overlaps.append((intersection, rule1, rule2))
     assert len(rule_memberships[0]) == 4
     board = [511]*81
     for rule in rules:
         possible_values = union(rule['combos'])
         for loc in rule['locs']:
             board[loc] &= possible_values
-    return board, rules, rule_memberships
+    consistency_check(rules, rule_memberships, rule_overlaps)
+    return board, rules, rule_memberships, rule_overlaps
 
 
 def main(problem):
     """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
-    board, rules, rule_memberships = setup(problem)
-    solved_board = solver(board, rules, rule_memberships)
+    board, rules, rule_memberships, rule_overlaps = setup(problem)
+    solved_board = solver(board, rules, rule_memberships, rule_overlaps)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
@@ -186,7 +225,7 @@ def remove_combos(board, rules, rule_memberships, rule, combos_to_remove):
         remove_possibilities(board, rules, rule_memberships, loc, board[loc] & ~possibilities)
 
 
-def solver(board, rules, rule_memberships):
+def solver(board, rules, rule_memberships, rule_overlaps):
     """This solves an arbitrary board using deduction and when that fails, guessing solutions
     >>> board, rules, rule_memberships = setup(test_problem)
     >>> solver(board, rules, rule_memberships) # doctest: +ELLIPSIS
@@ -199,8 +238,8 @@ def solver(board, rules, rule_memberships):
     progress_made = True
     while progress_made:
         progress_made = False
-        # check for known values that are still in a rule, this should speed things up.
         '''
+        # check for known values that are still in a rule, this should speed things up.
         for loc in range(81):
             if rule_memberships[loc] and board[loc] in {1, 2, 4, 8, 16, 32, 64, 128, 256}:
                 for rule in rule_memberships[loc]:
@@ -269,6 +308,7 @@ def solver(board, rules, rule_memberships):
             if len(rule['combos']) == 1:
                 # assert len(rule['locs']) != 1
                 subset_combo = next(iter(rule['combos']))
+                # todo try using rule_memberships to make this go faster. I should not check very rule.
                 for rule2 in rules:
                     if rule['locs'].issubset(rule2['locs']) and rule is not rule2:
                         rule2['locs'] -= rule['locs']
@@ -278,15 +318,41 @@ def solver(board, rules, rule_memberships):
                         for loc in rule['locs']:
                             rule_memberships[loc].remove(rule2)
                         progress_made = True
+                        # If rule2 has 0 or 1 locations left it can be removed.
                         if len(rule2['locs']) < 2:
                             if len(rule2['locs']) == 1:
                                 # assert pop_count[board[next(iter(rule2['locs']))]] == 1
                                 rule_memberships[next(iter(rule2['locs']))].remove(rule2)
                             rules.remove(rule2)
-            # assert len(rule['locs']) > 1
+                        else:
+                            rule2['to process'] = True
+            assert len(rule['locs']) > 1
 
-            # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
-            # then remove "5" from all locations in rule B not in the overlap
+        '''
+        # if rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
+        # then remove "5" from all locations in rule B not in the overlap
+        rule_overlaps = rule_overlaps_maker(rules)  # todo remove this
+        consistency_check(rules, rule_memberships, rule_overlaps)
+        # for subset_size in range(2, len(locs)-1):
+        for rule1, rule2, overlap in rule_overlaps:
+            must_be_in_rule = 511
+            for combo in rule1['combos']:
+                must_be_in_rule &= combo
+            locs = rule1['locs']
+            for subset_size in range(3, len(locs)-2):
+                for rule1_subset in itertools.combinations(locs, subset_size):
+                    could_be_outside_subset = union(board[loc] for loc in locs if loc not in rule1_subset)
+                    # print(must_be_in_rule & ~could_be_outside_subset)
+        '''
+
+        '''
+        for every rule1_subset in rule:
+            if there are numbers that must be in rule1_subset:
+                for every rule2 that is a superset of rule1_subset:
+                    remove the numbers from every square of rule2 not in rule1_subset
+
+        '''
+
     loc_to_guess = None
     min_possibility_count = 999
     # find the uncertain square with the least possible values
@@ -314,9 +380,11 @@ def solver(board, rules, rule_memberships):
             possible_rules.append(rule)
             for loc in rule['locs']:
                 possible_rule_memberships[loc].append(rule)
+        # possible_rule_overlaps = rule_overlaps_maker(possible_rules)
+        possible_rule_overlaps = rule_overlaps  # todo remove this
         try:
             remove_possibilities(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, ~possibility)
-            return solver(possible_board, possible_rules, possible_rule_memberships)
+            return solver(possible_board, possible_rules, possible_rule_memberships, possible_rule_overlaps)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
@@ -362,8 +430,20 @@ assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 
 if __name__ == '__main__':
     import problems
-    test_problem = problems.problems[0][1]
+    import time
+    test_problem = problems.problems[-1][1]
     # doctest.testmod()
-    test_board, test_rules, test_rule_memberships = setup(test_problem)
-    test_solved_board = solver(test_board, test_rules, test_rule_memberships)
+    test_board, test_rules, test_rule_memberships, test_rule_overlaps = setup(test_problem)
+    test_solved_board = solver(test_board, test_rules, test_rule_memberships, test_rule_overlaps)
     print(bad_guesses, test_solved_board)
+
+    start_time = time.perf_counter()
+    for _ in range(1000):
+        rule_overlaps_maker(test_rules)
+    print(time.perf_counter()- start_time)
+
+    start_time = time.perf_counter()
+    for _ in range(1000):
+        rule_overlaps_maker2(test_rule_memberships)
+    print(time.perf_counter() - start_time)
+
