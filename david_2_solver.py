@@ -56,6 +56,10 @@ moved deduction 5 and 6
 David 2 took a total of 2.570 seconds and 2029 bad guesses. Each bad guess took 1.267 milliseconds on average
 added deduction 5 (later reversed)
 David 2 took a total of 8.801 seconds and 1710 bad guesses. Each bad guess took 5.146 milliseconds on average
+added first draft of deduction 7
+David 2 took a total of 7.287 seconds and 922 bad guesses. Each bad guess took 7.904 milliseconds on average
+
+
 """
 import doctest
 import itertools
@@ -123,6 +127,7 @@ def rule_overlaps_maker(rules):
             intersection = rule1['locs'].intersection(rule2['locs'])
             if intersection:
                 rule_overlaps.append((intersection, rule1, rule2))
+                rule_overlaps.append((intersection, rule2, rule1))
     return rule_overlaps
 
 
@@ -166,12 +171,7 @@ def setup(problem):
     # I need to know which groups each square is a member of
     rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
     # it makes some of the logic faster to pre compute the overlaps between the rules
-    rule_overlaps = []
-    for i, rule1 in enumerate(rules):
-        for rule2 in rules[:i]:
-            intersection = rule1['locs'].intersection(rule2['locs'])
-            if intersection:
-                rule_overlaps.append((intersection, rule1, rule2))
+    rule_overlaps = rule_overlaps_maker(rules)
     assert len(rule_memberships[0]) == 4
     board = [511]*81
     for rule in rules:
@@ -288,8 +288,8 @@ def deduction4(board, rules, rule_memberships):
 
 def deduction5(board, rules, rule_memberships, rule):
     """For every subset in the rule if the number of possibilities in the subset is the same size as the subset
-    then remove the possibilities from all parts of the rule not in the subset
-    this is a generalisation of the deduction3 "set a value if it can only be in one location in the rule" """
+    then remove the possibilities from all parts of the rule not in the subset.
+    This is a generalisation of the deduction3 "set a value if it can only be in one location in the rule" """
     locs = rule['locs']
     for subset_size in range(2, len(locs) - 1):
         for subset in itertools.combinations(locs, subset_size):
@@ -334,20 +334,51 @@ def deduction6(rules, rule_memberships, rule):
 
 
 def deduction7(board, rules, rule_memberships, rule_overlaps):
-    """If rule A and rule B overlap and rule A must have a "5" somewhere in the overlap
-    then remove "5" from all locations in rule B not in the overlap"""
+    """If rule 1 and rule 2 overlap and rule 1 must have a "5" somewhere in the overlap
+    then remove "5" from all locations in rule 2 not in the overlap.
+    This looks a bit like deduction 5"""
     rule_overlaps = rule_overlaps_maker(rules)  # todo remove this
     consistency_check(rules, rule_memberships, rule_overlaps)
     # for subset_size in range(2, len(locs)-1):
-    for rule1, rule2, overlap in rule_overlaps:
-        must_be_in_rule = 511
+    for overlap, rule1, rule2 in rule_overlaps:  # todo do the other way round too
+        must_be_in_rule1 = 511
         for combo in rule1['combos']:
-            must_be_in_rule &= combo
-        locs = rule1['locs']
-        for subset_size in range(3, len(locs)-2):
-            for rule1_subset in itertools.combinations(locs, subset_size):
-                could_be_outside_subset = union(board[loc] for loc in locs if loc not in rule1_subset)
-                # print(must_be_in_rule & ~could_be_outside_subset)
+            must_be_in_rule1 &= combo
+        cant_be_outside_the_overlap = 511
+        # if a value must be in the rule somewhere but can't be outside the overlap then
+        # it must be in the overlap
+        for loc in rule1['locs']:
+            if loc not in overlap:
+                cant_be_outside_the_overlap &= ~board[loc]
+        must_be_in_overlap = must_be_in_rule1 & cant_be_outside_the_overlap
+
+        # if a there are a subset that has as many possibilities as elements in the subset
+        # then there the possibilities must be in the subset
+        for subset_size in range(2, len(overlap)+1):
+            for overlap_subset in itertools.combinations(overlap, subset_size):
+                potentially_in_overlap = union(board[loc] for loc in overlap_subset)
+                if pop_count[potentially_in_overlap] == subset_size:
+                    must_be_in_overlap &= potentially_in_overlap
+        for loc in rule2['locs']:
+            if loc not in overlap:
+                remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
+
+
+def deduction8():
+    """
+    for every rule1_subset in rule:
+        if there are numbers that must be in rule1_subset:
+            for every rule2 that is a superset of rule1_subset:
+                remove the numbers from every square of rule2 not in rule1_subset
+
+    This is an awesomely powerful deduction, it is a generalisation of:
+        - deduction3 (if a square has one possible value remove that value from the rest of the rule)
+        - deduction5 (if a value must be in a subset of a rule remove it from the rest of the rule)
+        - deduction7 (if a rule1 requires a value be in rule1's overlap with rule2
+            then remove the value from the other squares in rule2)
+
+    I can't see how to make it fast though :-(
+    """
 
 
 def solver(board, rules, rule_memberships, rule_overlaps):
@@ -373,16 +404,7 @@ def solver(board, rules, rule_memberships, rule_overlaps):
             # deduction5(board, rules, rule_memberships, rule)
             deduction6(rules, rule_memberships, rule)
             assert len(rule['locs']) > 1
-        # deduction7(board, rules, rule_memberships, rule_overlaps)
-
-
-        '''
-        for every rule1_subset in rule:
-            if there are numbers that must be in rule1_subset:
-                for every rule2 that is a superset of rule1_subset:
-                    remove the numbers from every square of rule2 not in rule1_subset
-
-        '''
+        deduction7(board, rules, rule_memberships, rule_overlaps)
 
     loc_to_guess = None
     min_possibility_count = 999
@@ -462,8 +484,8 @@ assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 if __name__ == '__main__':
     import problems
     import time
-    test_problem = problems.problems[-1][1]
-    # doctest.testmod()
+    test_problem = problems.problems[0][1]
+    doctest.testmod()
     test_board, test_rules, test_rule_memberships, test_rule_overlaps = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships, test_rule_overlaps)
     print(bad_guesses, test_solved_board)
