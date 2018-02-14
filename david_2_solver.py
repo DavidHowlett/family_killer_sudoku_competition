@@ -58,7 +58,8 @@ added deduction 5 (later reversed)
 David 2 took a total of 8.801 seconds and 1710 bad guesses. Each bad guess took 5.146 milliseconds on average
 added first draft of deduction 7
 David 2 took a total of 7.287 seconds and 922 bad guesses. Each bad guess took 7.904 milliseconds on average
-
+reduced rule overlaps recalculation
+David 2 took a total of 6.333 seconds and 844 bad guesses. Each bad guess took 7.504 milliseconds on average
 
 """
 import doctest
@@ -120,7 +121,7 @@ def print_board(board):
 
 def rule_overlaps_maker(rules):
     """This finds the overlaps between all of the rules"""
-    # todo try to make this run faster by starting with rule_overlaps rather then rules O(n^2) -> O(n)
+    # todo try to make this run faster by starting with rule_memberships rather then rules O(n^2) -> O(n)
     rule_overlaps = []
     for i, rule1 in enumerate(rules):
         for rule2 in rules[:i]:
@@ -337,10 +338,10 @@ def deduction7(board, rules, rule_memberships, rule_overlaps):
     """If rule 1 and rule 2 overlap and rule 1 must have a "5" somewhere in the overlap
     then remove "5" from all locations in rule 2 not in the overlap.
     This looks a bit like deduction 5"""
-    rule_overlaps = rule_overlaps_maker(rules)  # todo remove this
-    consistency_check(rules, rule_memberships, rule_overlaps)
+    # rule_overlaps = rule_overlaps_maker(rules)
+    # consistency_check(rules, rule_memberships, rule_overlaps)  # todo this should pass
     # for subset_size in range(2, len(locs)-1):
-    for overlap, rule1, rule2 in rule_overlaps:  # todo do the other way round too
+    for overlap, rule1, rule2 in rule_overlaps:
         must_be_in_rule1 = 511
         for combo in rule1['combos']:
             must_be_in_rule1 &= combo
@@ -433,8 +434,7 @@ def solver(board, rules, rule_memberships, rule_overlaps):
             possible_rules.append(rule)
             for loc in rule['locs']:
                 possible_rule_memberships[loc].append(rule)
-        # possible_rule_overlaps = rule_overlaps_maker(possible_rules)
-        possible_rule_overlaps = rule_overlaps  # todo remove this
+        possible_rule_overlaps = rule_overlaps_maker(possible_rules)
         try:
             remove_possibilities(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, ~possibility)
             return solver(possible_board, possible_rules, possible_rule_memberships, possible_rule_overlaps)
@@ -485,7 +485,7 @@ if __name__ == '__main__':
     import problems
     import time
     test_problem = problems.problems[0][1]
-    doctest.testmod()
+    # doctest.testmod()
     test_board, test_rules, test_rule_memberships, test_rule_overlaps = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships, test_rule_overlaps)
     print(bad_guesses, test_solved_board)
