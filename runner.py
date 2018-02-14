@@ -22,9 +22,7 @@ if __name__ == '__main__':
     for author, solver in solvers:
         solver.total_time_taken = 0
         solver.total_bad_guesses = 0
-        # this line makes things the same on windows and unix
-        normalised_source = '\n'.join(inspect.getsource(solver).split())
-        source_hash = hashlib.sha256(normalised_source.encode()).hexdigest()
+        source_hash = hashlib.sha256(inspect.getsource(solver).encode()).hexdigest()
         for problem_name, problem in problems.problems:
             file_name = f'results cache/{problem_name} by {author} {source_hash}.txt'
             try:
