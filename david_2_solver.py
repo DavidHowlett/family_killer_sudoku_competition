@@ -9,6 +9,7 @@ For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
     - remove duplicate rule overlaps and try the logic in deduction7 both ways round
+    - figure out how to only do deduction7 if one of the rules has changed
     - make a data structure for the rule overlaps that is incrementally updated
     - use the data structure
     - turn on doctests
@@ -64,8 +65,16 @@ David 2 took a total of 6.333 seconds and 844 bad guesses. Each bad guess took 7
 made deduction 7 less general
 removed a call to union
 David 2 took a total of 4.837 seconds and 844 bad guesses. Each bad guess took 5.731 milliseconds on average
+run deduction7 less often
+David 2 took a total of 3.339 seconds and 950 bad guesses. Each bad guess took 3.515 milliseconds on average
+don't pass the rule_overlaps to solver
+David 2 took a total of 3.829 seconds and 950 bad guesses. Each bad guess took 4.030 milliseconds on average
+turned off deduction7 for now
+David 2 took a total of 2.501 seconds and 2029 bad guesses. Each bad guess took 1.233 milliseconds on average
+turned off deduction4 for now
+David 2 took a total of 2.499 seconds and 1992 bad guesses. Each bad guess took 1.254 milliseconds on average
+
 """
-import doctest
 import itertools
 
 
@@ -174,22 +183,20 @@ def setup(problem):
               for locs in rows + cols + boxes]
     # I need to know which groups each square is a member of
     rule_memberships = [[rule for rule in rules if loc in rule['locs']] for loc in range(81)]
-    # it makes some of the logic faster to pre compute the overlaps between the rules
-    rule_overlaps = rule_overlaps_maker(rules)
     assert len(rule_memberships[0]) == 4
     board = [511]*81
     for rule in rules:
         possible_values = union(rule['combos'])
         for loc in rule['locs']:
             board[loc] &= possible_values
-    consistency_check(rules, rule_memberships, rule_overlaps)
-    return board, rules, rule_memberships, rule_overlaps
+    # consistency_check(rules, rule_memberships, rule_overlaps)
+    return board, rules, rule_memberships
 
 
 def main(problem):
     """This is the entry point for my code. It takes a killer sudoku problem and returns the solution"""
-    board, rules, rule_memberships, rule_overlaps = setup(problem)
-    solved_board = solver(board, rules, rule_memberships, rule_overlaps)
+    board, rules, rule_memberships = setup(problem)
+    solved_board = solver(board, rules, rule_memberships)
     return [set_to_val[square] for square in solved_board], bad_guesses
 
 
@@ -342,8 +349,6 @@ def deduction7(board, rules, rule_memberships, rule_overlaps):
     then remove "5" from all locations in rule 2 not in the overlap.
     This looks a bit like deduction 5"""
     # rule_overlaps = rule_overlaps_maker(rules)
-    # consistency_check(rules, rule_memberships, rule_overlaps)  # todo this should pass
-    # for subset_size in range(2, len(locs)-1):
     for overlap, rule1, rule2 in rule_overlaps:
         must_be_in_rule1 = 511
         for combo in rule1['combos']:
@@ -356,8 +361,8 @@ def deduction7(board, rules, rule_memberships, rule_overlaps):
                 cant_be_outside_the_overlap &= ~board[loc]
         must_be_in_overlap = must_be_in_rule1 & cant_be_outside_the_overlap
 
-        # if a there are a subset that has as many possibilities as elements in the subset
-        # then there the possibilities must be in the subset
+        # if the overlap has as many possibilities as the size of the overlap
+        # then there the possibilities must be in the overlap
         potentially_in_overlap = 0
         for loc in overlap:
             potentially_in_overlap &= board[loc]
@@ -385,7 +390,7 @@ def deduction8():
     """
 
 
-def solver(board, rules, rule_memberships, rule_overlaps):
+def solver(board, rules, rule_memberships):
     """This solves an arbitrary board using deduction and when that fails, guessing solutions
     >>> board, rules, rule_memberships = setup(test_problem)
     >>> solver(board, rules, rule_memberships) # doctest: +ELLIPSIS
@@ -393,11 +398,11 @@ def solver(board, rules, rule_memberships, rule_overlaps):
     """
     global bad_guesses
     # print_board(board)
-
     old_board = None
+
     while old_board != board:  # run the deductions until progress stops
         old_board = board.copy()
-        deduction4(board, rules, rule_memberships)
+        # deduction4(board, rules, rule_memberships)
         for rule in rules:
             if not rule['to process']:
                 continue
@@ -408,7 +413,8 @@ def solver(board, rules, rule_memberships, rule_overlaps):
             # deduction5(board, rules, rule_memberships, rule)
             deduction6(rules, rule_memberships, rule)
             assert len(rule['locs']) > 1
-        deduction7(board, rules, rule_memberships, rule_overlaps)
+    # rule_overlaps = rule_overlaps_maker(rules)
+    # deduction7(board, rules, rule_memberships, rule_overlaps)
 
     loc_to_guess = None
     min_possibility_count = 999
@@ -437,10 +443,9 @@ def solver(board, rules, rule_memberships, rule_overlaps):
             possible_rules.append(rule)
             for loc in rule['locs']:
                 possible_rule_memberships[loc].append(rule)
-        possible_rule_overlaps = rule_overlaps_maker(possible_rules)
         try:
             remove_possibilities(possible_board, possible_rules, possible_rule_memberships, loc_to_guess, ~possibility)
-            return solver(possible_board, possible_rules, possible_rule_memberships, possible_rule_overlaps)
+            return solver(possible_board, possible_rules, possible_rule_memberships)
         except Contradiction:
             # then that particular guess is wrong
             bad_guesses += 1
@@ -487,10 +492,10 @@ assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 if __name__ == '__main__':
     import problems
     import time
-    test_problem = problems.problems[0][1]
+    test_problem = problems.problems[-1][1]
     # doctest.testmod()
-    test_board, test_rules, test_rule_memberships, test_rule_overlaps = setup(test_problem)
-    test_solved_board = solver(test_board, test_rules, test_rule_memberships, test_rule_overlaps)
+    test_board, test_rules, test_rule_memberships = setup(test_problem)
+    test_solved_board = solver(test_board, test_rules, test_rule_memberships)
     print(bad_guesses, test_solved_board)
 
     start_time = time.perf_counter()
