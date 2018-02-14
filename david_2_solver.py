@@ -8,6 +8,7 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
+    - remove duplicate rule overlaps and try the logic in deduction7 both ways round
     - make a data structure for the rule overlaps that is incrementally updated
     - use the data structure
     - turn on doctests
@@ -60,7 +61,9 @@ added first draft of deduction 7
 David 2 took a total of 7.287 seconds and 922 bad guesses. Each bad guess took 7.904 milliseconds on average
 reduced rule overlaps recalculation
 David 2 took a total of 6.333 seconds and 844 bad guesses. Each bad guess took 7.504 milliseconds on average
-
+made deduction 7 less general
+removed a call to union
+David 2 took a total of 4.837 seconds and 844 bad guesses. Each bad guess took 5.731 milliseconds on average
 """
 import doctest
 import itertools
@@ -355,11 +358,11 @@ def deduction7(board, rules, rule_memberships, rule_overlaps):
 
         # if a there are a subset that has as many possibilities as elements in the subset
         # then there the possibilities must be in the subset
-        for subset_size in range(2, len(overlap)+1):
-            for overlap_subset in itertools.combinations(overlap, subset_size):
-                potentially_in_overlap = union(board[loc] for loc in overlap_subset)
-                if pop_count[potentially_in_overlap] == subset_size:
-                    must_be_in_overlap &= potentially_in_overlap
+        potentially_in_overlap = 0
+        for loc in overlap:
+            potentially_in_overlap &= board[loc]
+        if pop_count[potentially_in_overlap] == len(overlap):
+            must_be_in_overlap &= potentially_in_overlap
         for loc in rule2['locs']:
             if loc not in overlap:
                 remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
