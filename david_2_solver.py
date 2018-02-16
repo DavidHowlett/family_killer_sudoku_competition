@@ -73,9 +73,14 @@ turned off deduction7 for now
 David 2 took a total of 2.501 seconds and 2029 bad guesses. Each bad guess took 1.233 milliseconds on average
 turned off deduction4 for now
 David 2 took a total of 2.499 seconds and 1992 bad guesses. Each bad guess took 1.254 milliseconds on average
+turned on deduction7 and optimised it further
+David 2 took a total of 3.578 seconds and 1992 bad guesses. Each bad guess took 1.796 milliseconds on average
+deduction 7 optimiseation
+David 2 took a total of 3.384 seconds and 1992 bad guesses. Each bad guess took 1.699 milliseconds on average
 
 """
 import itertools
+import doctest
 
 
 class Contradiction(Exception):
@@ -131,20 +136,7 @@ def print_board(board):
     print(to_print)
 
 
-def rule_overlaps_maker(rules):
-    """This finds the overlaps between all of the rules"""
-    # todo try to make this run faster by starting with rule_memberships rather then rules O(n^2) -> O(n)
-    rule_overlaps = []
-    for i, rule1 in enumerate(rules):
-        for rule2 in rules[:i]:
-            intersection = rule1['locs'].intersection(rule2['locs'])
-            if intersection:
-                rule_overlaps.append((intersection, rule1, rule2))
-                rule_overlaps.append((intersection, rule2, rule1))
-    return rule_overlaps
-
-
-def consistency_check(rules, rule_memberships, rule_overlaps):
+def consistency_check(rules, rule_memberships):
     # all the rules should be listed in rule_memberships
     for rule in rules:
         for loc in rule['locs']:
@@ -153,7 +145,6 @@ def consistency_check(rules, rule_memberships, rule_overlaps):
     for loc in range(81):
         for rule in rule_memberships[loc]:
             assert loc in rule['locs']
-    assert rule_overlaps == rule_overlaps_maker(rules)
 
 
 def setup(problem):
@@ -344,33 +335,55 @@ def deduction6(rules, rule_memberships, rule):
                     rule2['to process'] = True
 
 
-def deduction7(board, rules, rule_memberships, rule_overlaps):
+def deduction7(board, rules, rule_memberships):
     """If rule 1 and rule 2 overlap and rule 1 must have a "5" somewhere in the overlap
     then remove "5" from all locations in rule 2 not in the overlap.
     This looks a bit like deduction 5"""
-    # rule_overlaps = rule_overlaps_maker(rules)
-    for overlap, rule1, rule2 in rule_overlaps:
-        must_be_in_rule1 = 511
-        for combo in rule1['combos']:
-            must_be_in_rule1 &= combo
-        cant_be_outside_the_overlap = 511
-        # if a value must be in the rule somewhere but can't be outside the overlap then
-        # it must be in the overlap
-        for loc in rule1['locs']:
-            if loc not in overlap:
-                cant_be_outside_the_overlap &= ~board[loc]
-        must_be_in_overlap = must_be_in_rule1 & cant_be_outside_the_overlap
+    for i, rule1 in enumerate(rules):
+        for rule2 in rules[:i]:
+            overlap = rule1['locs'].intersection(rule2['locs'])
+            if not overlap:
+                continue
+            '''
+            # if a value must be in the rule somewhere but can't be outside the overlap then
+            # it must be in the overlap
+            must_be_in_rule1 = 511
+            for combo in rule1['combos']:
+                must_be_in_rule1 &= combo
+            cant_be_outside_rule1_overlap = 511
+            for loc in rule1['locs']:
+                if loc not in overlap:
+                    cant_be_outside_rule1_overlap &= ~board[loc]
+            must_be_in_overlap = must_be_in_rule1 & cant_be_outside_rule1_overlap
 
-        # if the overlap has as many possibilities as the size of the overlap
-        # then there the possibilities must be in the overlap
-        potentially_in_overlap = 0
-        for loc in overlap:
-            potentially_in_overlap &= board[loc]
-        if pop_count[potentially_in_overlap] == len(overlap):
-            must_be_in_overlap &= potentially_in_overlap
-        for loc in rule2['locs']:
-            if loc not in overlap:
-                remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
+            
+            # the same logic applies to rule2
+            must_be_in_rule2 = 511
+            for combo in rule2['combos']:
+                must_be_in_rule2 &= combo
+            cant_be_outside_rule2_overlap = 511
+            for loc in rule2['locs']:
+                if loc not in overlap:
+                    cant_be_outside_rule2_overlap &= ~board[loc]
+            must_be_in_overlap &= must_be_in_rule2 & cant_be_outside_rule2_overlap
+            '''
+            # if the overlap has as many possibilities as the size of the overlap
+            # then there the possibilities must be in the overlap
+            potentially_in_overlap = 0
+            for loc in overlap:
+                potentially_in_overlap &= board[loc]
+            if pop_count[potentially_in_overlap] == len(overlap):
+                must_be_in_overlap = potentially_in_overlap
+            else:
+                continue
+
+            for loc in rule2['locs']:
+                if loc not in overlap:
+                    remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
+
+            for loc in rule1['locs']:
+                if loc not in overlap:
+                    remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
 
 
 def deduction8():
@@ -413,8 +426,7 @@ def solver(board, rules, rule_memberships):
             # deduction5(board, rules, rule_memberships, rule)
             deduction6(rules, rule_memberships, rule)
             assert len(rule['locs']) > 1
-    # rule_overlaps = rule_overlaps_maker(rules)
-    # deduction7(board, rules, rule_memberships, rule_overlaps)
+    deduction7(board, rules, rule_memberships)
 
     loc_to_guess = None
     min_possibility_count = 999
@@ -492,12 +504,11 @@ assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 if __name__ == '__main__':
     import problems
     import time
-    test_problem = problems.problems[-1][1]
-    # doctest.testmod()
+    test_problem = problems.problems[0][1]
+    doctest.testmod()
     test_board, test_rules, test_rule_memberships = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships)
     print(bad_guesses, test_solved_board)
-
     start_time = time.perf_counter()
     for _ in range(100):
         rule_overlaps_maker(test_rules)
