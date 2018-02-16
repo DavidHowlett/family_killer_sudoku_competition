@@ -8,13 +8,9 @@ A possible combination of digits for a section is represented as the 1 bits in a
 For example a combo of 7 that means the section contains [1, 2, 3]
 
 ToDo:
-    - remove duplicate rule overlaps and try the logic in deduction7 both ways round
-    - figure out how to only do deduction7 if one of the rules has changed
-    - make a data structure for the rule overlaps that is incrementally updated
-    - use the data structure
-    - turn on doctests
     - exclude more values within a rule based on constraints from the combos and the current possibilities
     - when the board gets solved, notice earlier
+    - figure out how to only do deduction7 if one of the rules has changed
     - experiment with "process rule" being a callable function,
         this would allow the use of the profiler
         this would allow calls inside add_value and remove_possibility
@@ -75,10 +71,14 @@ turned off deduction4 for now
 David 2 took a total of 2.499 seconds and 1992 bad guesses. Each bad guess took 1.254 milliseconds on average
 turned on deduction7 and optimised it further
 David 2 took a total of 3.578 seconds and 1992 bad guesses. Each bad guess took 1.796 milliseconds on average
-deduction 7 optimiseation
+deduction 7 optimisation
 David 2 took a total of 3.384 seconds and 1992 bad guesses. Each bad guess took 1.699 milliseconds on average
 deduction 7 smarter
 David 2 took a total of 2.932 seconds and 1018 bad guesses. Each bad guess took 2.880 milliseconds on average
+deduction 7 skips more pointless work
+David 2 took a total of 2.458 seconds and 1018 bad guesses. Each bad guess took 2.415 milliseconds on average
+deduction 7 run at a better time
+David 2 took a total of 2.475 seconds and 896 bad guesses. Each bad guess took 2.763 milliseconds on average
 """
 import itertools
 import doctest
@@ -341,9 +341,10 @@ def deduction7(board, rules, rule_memberships):
     then remove "5" from all locations in rule 2 not in the overlap.
     This looks a bit like deduction 5"""
     for i, rule1 in enumerate(rules):
+        locs1 = rule1['locs']
         for rule2 in rules[:i]:
-            overlap = rule1['locs'].intersection(rule2['locs'])
-            if not overlap:
+            overlap = locs1.intersection(rule2['locs'])
+            if not overlap or len(overlap) == 1:
                 continue
             must_be_in_overlap = 0
 
@@ -353,7 +354,7 @@ def deduction7(board, rules, rule_memberships):
             for combo in rule1['combos']:
                 must_be_in_rule1 &= combo
             cant_be_outside_rule1_overlap = 511
-            for loc in rule1['locs']:
+            for loc in locs1:
                 if loc not in overlap:
                     cant_be_outside_rule1_overlap &= ~board[loc]
             must_be_in_overlap |= must_be_in_rule1 & cant_be_outside_rule1_overlap
@@ -379,11 +380,11 @@ def deduction7(board, rules, rule_memberships):
             if not must_be_in_overlap:
                 continue
 
-            for loc in rule2['locs']:
+            for loc in locs1:
                 if loc not in overlap:
                     remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
 
-            for loc in rule1['locs']:
+            for loc in rule2['locs']:
                 if loc not in overlap:
                     remove_possibilities(board, rules, rule_memberships, loc, must_be_in_overlap)
 
@@ -414,7 +415,7 @@ def solver(board, rules, rule_memberships):
     global bad_guesses
     # print_board(board)
     old_board = None
-
+    first_loop = True
     while old_board != board:  # run the deductions until progress stops
         old_board = board.copy()
         # deduction4(board, rules, rule_memberships)
@@ -427,8 +428,9 @@ def solver(board, rules, rule_memberships):
             deduction3(board, rules, rule_memberships, rule)
             # deduction5(board, rules, rule_memberships, rule)
             deduction6(rules, rule_memberships, rule)
-            assert len(rule['locs']) > 1
-    deduction7(board, rules, rule_memberships)
+        if first_loop:
+            first_loop = False
+            deduction7(board, rules, rule_memberships)
 
     loc_to_guess = None
     min_possibility_count = 999
