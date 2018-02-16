@@ -79,6 +79,8 @@ deduction 7 skips more pointless work
 David 2 took a total of 2.458 seconds and 1018 bad guesses. Each bad guess took 2.415 milliseconds on average
 deduction 7 run at a better time
 David 2 took a total of 2.475 seconds and 896 bad guesses. Each bad guess took 2.763 milliseconds on average
+deduction 4 enabled
+David 2 took a total of 2.333 seconds and 912 bad guesses. Each bad guess took 2.558 milliseconds on average
 """
 import itertools
 import doctest
@@ -418,7 +420,6 @@ def solver(board, rules, rule_memberships):
     first_loop = True
     while old_board != board:  # run the deductions until progress stops
         old_board = board.copy()
-        # deduction4(board, rules, rule_memberships)
         for rule in rules:
             if not rule['to process']:
                 continue
@@ -430,6 +431,7 @@ def solver(board, rules, rule_memberships):
             deduction6(rules, rule_memberships, rule)
         if first_loop:
             first_loop = False
+            deduction4(board, rules, rule_memberships)
             deduction7(board, rules, rule_memberships)
 
     loc_to_guess = None
@@ -507,7 +509,6 @@ assert set_to_total[next(iter(combos_by_len_and_total[3][20]))] == 20
 
 if __name__ == '__main__':
     import problems
-    import time
     test_problem = problems.problems[0][1]
     doctest.testmod()
     test_board, test_rules, test_rule_memberships = setup(test_problem)
