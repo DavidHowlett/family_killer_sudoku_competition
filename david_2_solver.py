@@ -77,7 +77,8 @@ turned on deduction7 and optimised it further
 David 2 took a total of 3.578 seconds and 1992 bad guesses. Each bad guess took 1.796 milliseconds on average
 deduction 7 optimiseation
 David 2 took a total of 3.384 seconds and 1992 bad guesses. Each bad guess took 1.699 milliseconds on average
-
+deduction 7 smarter
+David 2 took a total of 2.932 seconds and 1018 bad guesses. Each bad guess took 2.880 milliseconds on average
 """
 import itertools
 import doctest
@@ -344,7 +345,8 @@ def deduction7(board, rules, rule_memberships):
             overlap = rule1['locs'].intersection(rule2['locs'])
             if not overlap:
                 continue
-            '''
+            must_be_in_overlap = 0
+
             # if a value must be in the rule somewhere but can't be outside the overlap then
             # it must be in the overlap
             must_be_in_rule1 = 511
@@ -354,9 +356,8 @@ def deduction7(board, rules, rule_memberships):
             for loc in rule1['locs']:
                 if loc not in overlap:
                     cant_be_outside_rule1_overlap &= ~board[loc]
-            must_be_in_overlap = must_be_in_rule1 & cant_be_outside_rule1_overlap
+            must_be_in_overlap |= must_be_in_rule1 & cant_be_outside_rule1_overlap
 
-            
             # the same logic applies to rule2
             must_be_in_rule2 = 511
             for combo in rule2['combos']:
@@ -365,16 +366,17 @@ def deduction7(board, rules, rule_memberships):
             for loc in rule2['locs']:
                 if loc not in overlap:
                     cant_be_outside_rule2_overlap &= ~board[loc]
-            must_be_in_overlap &= must_be_in_rule2 & cant_be_outside_rule2_overlap
-            '''
+            must_be_in_overlap |= must_be_in_rule2 & cant_be_outside_rule2_overlap
+
             # if the overlap has as many possibilities as the size of the overlap
             # then there the possibilities must be in the overlap
             potentially_in_overlap = 0
             for loc in overlap:
-                potentially_in_overlap &= board[loc]
+                potentially_in_overlap |= board[loc]
             if pop_count[potentially_in_overlap] == len(overlap):
-                must_be_in_overlap = potentially_in_overlap
-            else:
+                must_be_in_overlap |= potentially_in_overlap
+
+            if not must_be_in_overlap:
                 continue
 
             for loc in rule2['locs']:
@@ -509,7 +511,3 @@ if __name__ == '__main__':
     test_board, test_rules, test_rule_memberships = setup(test_problem)
     test_solved_board = solver(test_board, test_rules, test_rule_memberships)
     print(bad_guesses, test_solved_board)
-    start_time = time.perf_counter()
-    for _ in range(100):
-        rule_overlaps_maker(test_rules)
-    print(time.perf_counter() - start_time)
