@@ -225,11 +225,49 @@ def ruleof4xet(xet): #Eliminate possibles where a cellquad in that set are defin
                                 if popcount[cell1 | cell2 | cell3 | cell4] == 4:  # and if only 3 digits are set then...
                                     #print("n1=",n1,", n2=",n2,", n3=",n3, n4=",n4)  #display where we are
                                     #print("Match")
-                                    notthis=511-(cell1 | cell2 | cell3);        #The inverse of this value
+                                    notthis=511-(cell1 | cell2 | cell3 | cell4);        #The inverse of this value
                                     for nn in range(0,len(xet)):          #Look through every cell on the xet
                                         if (nn!=n1) and (nn!=n2) and (nn!=n3) and (nn!=n4): #If the cell is not one that we are pointing at right now:
                                             board[xet[nn]]=board[xet[nn]] & notthis #Strip these digits
 
+def ruleof5xet(xet): #Eliminate possibles where a cellquad in that set are definitely known.
+    #for example:   98 6  3 1  987654321  987654321
+    #               987654321  98 6  3 1  98 6  3 1
+    #               98 6  3 1  987654321  987654321
+    #should result in 3 & 1 being removed from the rest of the xet:
+    #for example:   98 6  3 1    7 54 2     7 54 2
+    #                 7 54 2   98 6  3 1  98 6  3 1
+    #               98 6  3 1    7 54 2     7 54 2
+    #    print("ruleof4xet(",y,")")
+    for n1 in range(0,len(xet)-4):                         #Compare every cell on the row
+        cell1 = board[xet[n1]]  # What is in this cell?
+        #print("n1=",n1)
+        if popcount[cell1] <= 5:  # and if only 5 digits are set then...
+            for n2 in range(n1+1,len(xet)-3):                  #with every other cell on the row
+                #print("n1=",n1,"n2=", n2)
+                cell2 = board[xet[n2]]  # What is in this cell?
+                if popcount[cell1 | cell2] <= 5:  # and if only 5 digits are set then...
+                    for n3 in range(n2 + 1, len(xet)-2):           # with every other cell on the row
+                        #print("n1=",n1,"n2=", n2,"n3=", n3)
+                        cell3 = board[xet[n3]]  # What is in this cell?
+                        if popcount[cell1 | cell2 | cell3] <= 5:  # and if only 5 digits are set then...
+                            for n4 in range(n3 + 1, len(xet)-1):  # with every other cell on the row
+                                #print("n1=",n1,"n2=", n2,"n3=", n3,"n4=", n4)
+                                cell4 = board[xet[n4]]  # What is in this cell?
+                                if popcount[cell1 | cell2 | cell3 | cell4] <= 5:  # and if only 5 digits are set then...
+                                    for n5 in range(n4 + 1, len(xet)):  # with every other cell on the row
+                                        #print("n1=",n1,"n2=", n2,"n3=", n3,"n4=", n4, "n5=", n5)
+                                        cell5 = board[xet[n5]]  # What is in this cell?
+                                        if popcount[cell1 | cell2 | cell3 | cell4 | cell5] < 5:  # and if only 3 digits are set then...
+                                            print("ERROR: Too few digits in ruleof5xet")
+                                            x=1/0
+                                        if popcount[cell1 | cell2 | cell3 | cell4 | cell5] == 5:  # and if only 3 digits are set then...
+                                            #print("n1=",n1,", n2=",n2,", n3=",n3, ", n4=",n4, ", n5=",n5)  #display where we are
+                                            #print("Match")
+                                            notthis=511-(cell1 | cell2 | cell3 | cell4 | cell5);        #The inverse of this value
+                                            for nn in range(0,len(xet)):          #Look through every cell on the xet
+                                                if (nn!=n1) and (nn!=n2) and (nn!=n3) and (nn!=n4) and (nn!=n5): #If the cell is not one that we are pointing at right now:
+                                                    board[xet[nn]]=board[xet[nn]] & notthis #Strip these digits
 
 
 def testruleof1xet(): #Test the "Rule of 1" for a set.
@@ -291,7 +329,7 @@ def testruleof3xet():  # Test the "Rule of 3" for a set. If 3 cells contain the 
         for n in range(0, 81):                # Check every cell in the board
             assert board[n] == 511
 
-def testruleof4xet():  # Test the "Rule of 3" for a set. If 3 cells contain the same 3 digits, eliminate that from the rest of the cells
+def testruleof4xet():  # Test the "Rule of 4" for a set. If 4 cells contain the same 4 digits, eliminate that from the rest of the cells
     # Try each xet in the puzzle.
     for xet in xets:
         resetboard(511)  # set every cell to every possible value
@@ -302,13 +340,13 @@ def testruleof4xet():  # Test the "Rule of 3" for a set. If 3 cells contain the 
         ruleof4xet(xet)  # Remove "9", "4", "3" and "1" from 7 cells in that xet
         # test that "9", "4", "3" & "1" have been removed from the xet, but nowhere else
         #print_board()
-        assert board[xet[0]] == 269  # Check this is still 13, but fix it.
+        assert board[xet[0]] == 269  # Check this is still 269, but fix it.
         board[xet[0]] = 511-269
-        assert board[xet[2]] == 269  # Check this is still 13, but fix it.
+        assert board[xet[2]] == 269  # Check this is still 269, but fix it.
         board[xet[2]] = 511-269
-        assert board[xet[3]] == 269  # Check this is still 13, but fix it.
+        assert board[xet[3]] == 269  # Check this is still 269, but fix it.
         board[xet[3]] = 511-269
-        assert board[xet[5]] == 269  # Check this is still 13, but fix it.
+        assert board[xet[5]] == 269  # Check this is still 269, but fix it.
         board[xet[5]] = 511-269
         for n in range(0, len(xet)):
             assert board[xet[n]] == 511 - 269  # Check every cell in the set is okay
@@ -317,7 +355,35 @@ def testruleof4xet():  # Test the "Rule of 3" for a set. If 3 cells contain the 
         for n in range(0, 81):                # Check every cell in the board
             assert board[n] == 511
 
-#    def testruleof4xet()
+def testruleof5xet():  # Test the "Rule of 5" for a set. If 5 cells contain the same 5 digits, eliminate that from the rest of the cells
+    # Try each xet in the puzzle.
+    for xet in xets:
+        resetboard(511)  # set every cell to every possible value
+        board[xet[0]] = 397  # Top left cell in this xet is now "9", "8", "4", "3" or "1" (256+128+8+4+1)
+        board[xet[2]] = 397  # Top right cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[3]] = 397  # Centre left centre cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[5]] = 397  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[6]] = 397  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        ruleof5xet(xet)  # Remove "9", "4", "3" and "1" from 7 cells in that xet
+        # test that "9", "4", "3" & "1" have been removed from the xet, but nowhere else
+        #print_board()
+        assert board[xet[0]] == 397  # Check this is still 397, but fix it.
+        board[xet[0]] = 511-397
+        assert board[xet[2]] == 397  # Check this is still 397, but fix it.
+        board[xet[2]] = 511-397
+        assert board[xet[3]] == 397  # Check this is still 397, but fix it.
+        board[xet[3]] = 511-397
+        assert board[xet[5]] == 397  # Check this is still 397, but fix it.
+        board[xet[5]] = 511-397
+        assert board[xet[6]] == 397  # Check this is still 397, but fix it.
+        board[xet[6]] = 511-397
+        for n in range(0, len(xet)):
+            assert board[xet[n]] == 511 - 397  # Check every cell in the set is okay
+            board[xet[n]] = 511
+        #print_board()
+        for n in range(0, 81):                # Check every cell in the board
+            assert board[n] == 511
+
 #    def testruleof5xet()
 #    def testruleof6xet()
 #    def testruleof7xet()
@@ -359,7 +425,7 @@ testruleof1xet()
 testruleof2xet()
 testruleof3xet()
 testruleof4xet()
-#testruleof5xet()
+testruleof5xet()
 #testruleof6xet()
 #testruleof7xet()
 #testruleof8xet()
