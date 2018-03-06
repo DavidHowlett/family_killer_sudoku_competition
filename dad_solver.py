@@ -55,9 +55,6 @@ import dad_tests
 #import problems
 
 
-
-
-
 starttime=time.perf_counter()
 
 

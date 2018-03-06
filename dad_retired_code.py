@@ -170,6 +170,59 @@ nonettoboard = [0, 1, 2, 9, 10, 11, 18, 19, 20, 3, 4, 5, 12, 13, 14, 21, 22, 23,
               55, 56, 63, 64, 65, 72, 73, 74, 57, 58, 59, 66, 67, 68, 75, 76, 77, 60, 61, 62, 69, 70, 71, 78, 79, 80]
 
 
+#Code to make "problem dad" to extend the problem repertoire
+xyz=[[1,1,1,2,13],
+[1,3,2,3,9],
+[1,4,1,5,12],
+[1,6,1,7,12],
+[1,8,1,9,7],
+[2,1,2,2,3,2,16],
+[2,4,2,5,9],
+[2,6,2,7,10],
+[2,8,2,9,3,8,3,9,23],
+[3,1,4,1,5],
+[3,3,4,3,9],
+[3,4,3,5,8],
+[3,6,3,7,9],
+[4,2,5,2,12],
+[4,4,5,4,6,4,18],
+[4,5,5,5,6],
+[4,6,4,7,5,6,5,7,22],
+[4,8,5,8,8],
+[4,9,5,9,6,9,12],
+[5,1,6,1,8],
+[5,3,6,2,6,3,7,3,23],
+[6,5,6,6,15],
+[6,7,7,7,7],
+[6,8,7,8,13],
+[7,1,8,1,9,1,23],
+[7,2,8,2,8],
+[7,4,7,5,12],
+[7,6,8,6,8,7,10],
+[7,9,8,8,8,9,9,8,9,9,27],
+[8,3,9,2,9,3,9],
+[8,4,8,5,11],
+[9,4,9,5,8],
+[9,6,9,7,11]]
+
+abc=[]
+
+cagecount=0
+for cage in xyz:
+    cagecount=cagecount+1
+    abc.append([])                                 # create[]
+    abc[cagecount-1].append(cage[len(cage)-1])     # make it [cagetotal],[cagetotal],[cagetotal]...
+
+    cellcount=(len(cage))//2
+    print(cellcount)
+    for n in range(0,cellcount):
+        abc[cagecount-1].append([])
+        abc[cagecount-1][n+1].append(cage[n*2])
+        abc[cagecount-1][n+1].append(cage[n*2+1])
+        n=n+0
+
+print(abc)
+
 """
 
 #for i in range(10):         #For up to 9 required digits

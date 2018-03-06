@@ -3,6 +3,9 @@ import pytest
 import time
 #import dad_solver
 
+#reportinglevel=100   #0 is silent, 100 is everything
+
+
 #rules that we follow
 #ruleof1: If a value is known, it can be excluded from the row, column, xet and cage that contain it.
 
@@ -114,14 +117,14 @@ def print_board():
             print(binarytodisplay[board[cellno]],end=' ')
 
         print()
-    print("BoardPopcount(board)= ",boardpopcount(board))
+    print("BoardPopcount()= ",boardpopcount())
 
 def resetboard(n):
     # clear the board down to fully unknown
     for i in range(0,81):
         board[i]=n;
 
-def boardpopcount(board):
+def boardpopcount():
     #Get the popcount for the entire board
     total=0
     for i in range(0,81):
@@ -174,7 +177,7 @@ def ruleof3xet(xet): #Eliminate possibles where a celltriple in that set are def
     #for example:      6  3 1  987654321  987654321
     #               987654321     6  3 1  987654321
     #                  6  3 1  987654321  987654321
-    #should result in 3 & 1 being removed from the rest of the xet:
+    #should result in 6, 3 & 1 being removed from the rest of the xet:
     #for example:      6  3 1  987 54 2   987 54 2
     #               987 54 2      6  3 1  987 54 2
     #                  6  3 1  987 54 2   987 54 2
@@ -203,7 +206,7 @@ def ruleof4xet(xet): #Eliminate possibles where a cellquad in that set are defin
     #for example:   9  6  3 1  987654321  987654321
     #               987654321  9  6  3 1  987654321
     #               9  6  3 1  987654321  987654321
-    #should result in 3 & 1 being removed from the rest of the xet:
+    #should result in 9, 6, 3 & 1 being removed from the rest of the xet:
     #for example:   9  6  3 1   87 54 2    87 54 2
     #                87 54 2   9  6  3 1   87 54 2
     #               9  6  3 1   87 54 2    87 54 2
@@ -234,7 +237,7 @@ def ruleof5xet(xet): #Eliminate possibles where a cellquad in that set are defin
     #for example:   98 6  3 1  987654321  987654321
     #               987654321  98 6  3 1  98 6  3 1
     #               98 6  3 1  987654321  987654321
-    #should result in 3 & 1 being removed from the rest of the xet:
+    #should result in 9, 8, 6, 3 & 1 being removed from the rest of the xet:
     #for example:   98 6  3 1    7 54 2     7 54 2
     #                 7 54 2   98 6  3 1  98 6  3 1
     #               98 6  3 1    7 54 2     7 54 2
@@ -269,13 +272,61 @@ def ruleof5xet(xet): #Eliminate possibles where a cellquad in that set are defin
                                                 if (nn!=n1) and (nn!=n2) and (nn!=n3) and (nn!=n4) and (nn!=n5): #If the cell is not one that we are pointing at right now:
                                                     board[xet[nn]]=board[xet[nn]] & notthis #Strip these digits
 
+def ruleof6xet(xet): #Eliminate possibles where a cellquad in that set are definitely known.
+    #for example:   98 6  321  9876543 1  98 6  321
+    #               9876543 1  98 6  321  98 6  321
+    #               98 6  321  9876543 1  9876543 1
+    #should result in 9, 8, 6, 3, 2 & 1 being removed from the rest of the xet:
+    #for example:   98 6  321    7 54     98 6  321
+    #                 7 54     98 6  321  98 6  3 1
+    #               98 6  321    7 54       7 54
+    #    print("ruleof4xet(",y,")")
+    for n1 in range(0,len(xet)-4):                         #Compare every cell on the row
+        cell1 = board[xet[n1]]  # What is in this cell?
+        #print("n1=",n1)
+        if popcount[cell1] <= 6:  # and if only 5 digits are set then...
+            for n2 in range(n1+1,len(xet)-4):                  #with every other cell on the row
+                #print("n1=",n1,"n2=", n2)
+                cell2 = board[xet[n2]]  # What is in this cell?
+                if popcount[cell1 | cell2] <= 6:  # and if only 5 digits are set then...
+                    for n3 in range(n2 + 1, len(xet)-3):           # with every other cell on the row
+                        #print("n1=",n1,"n2=", n2,"n3=", n3)
+                        cell3 = board[xet[n3]]  # What is in this cell?
+                        if popcount[cell1 | cell2 | cell3] <= 6:  # and if only 5 digits are set then...
+                            for n4 in range(n3 + 1, len(xet)-2):  # with every other cell on the row
+                                #print("n1=",n1,"n2=", n2,"n3=", n3,"n4=", n4)
+                                cell4 = board[xet[n4]]  # What is in this cell?
+                                if popcount[cell1 | cell2 | cell3 | cell4] <= 6:  # and if only 5 digits are set then...
+                                    for n5 in range(n4 + 1, len(xet)-1):  # with every other cell on the row
+                                        #print("n1=",n1,"n2=", n2,"n3=", n3,"n4=", n4, "n5=", n5)
+                                        cell5 = board[xet[n5]]  # What is in this cell?
+                                        if popcount[cell1 | cell2 | cell3 | cell4 | cell5] <= 6:  # and if only 3 digits are set then...
+                                            for n6 in range(n5 + 1, len(xet)):  # with every other cell on the row
+                                                #print("n1=",n1,"n2=", n2,"n3=", n3,"n4=", n4, "n5=", n5, ", n6=",n6)
+                                                cell6 = board[xet[n6]]  # What is in this cell?
+                                                if popcount[cell1 | cell2 | cell3 | cell4 | cell5| cell6] < 6:  # and if only 3 digits are set then...
+                                                    print("ERROR: Too few digits in ruleof6xet")
+                                                    x=1/0
+                                                if popcount[cell1 | cell2 | cell3 | cell4 | cell5 | cell6] == 6:  # and if only 3 digits are set then...
+                                                    #print("n1=",n1,", n2=",n2,", n3=",n3, ", n4=",n4, ", n5=",n5)  #display where we are
+                                                    #print("Match")
+                                                    notthis=511-(cell1 | cell2 | cell3 | cell4 | cell5| cell6);        #The inverse of this value
+                                                    for nn in range(0,len(xet)):          #Look through every cell on the xet
+                                                        if (nn!=n1) and (nn!=n2) and (nn!=n3) and (nn!=n4) and (nn!=n5) and (nn!=n6): #If the cell is not one that we are pointing at right now:
+                                                            board[xet[nn]]=board[xet[nn]] & notthis #Strip these digits
 
 def testruleof1xet(): #Test the "Rule of 1" for a set.
     #Try each set in the puzzle.
     for xet in xets:       #Every row, column and nonet
         resetboard(511)    #set every cell to every possible value
         board[xet[5]]=16   #Middle cell in this xet is now "5"
+        precount=boardpopcount()
+        pretime = time.process_time()
         ruleof1xet(xet)    #Remove "5" from every cell in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
+
         # test that "5" has been removed from the xet, but nowhere else
         # As I worked through these tests, make them 511 so I can check everything left is 511
         assert board[xet[ 5]]==16  #Check this is still 16, but fix it.
@@ -293,7 +344,12 @@ def testruleof2xet(): #Test the "Rule of 2" for a set. If 2 cells contain the sa
         board[xet[0]]=5   #Top left cell in this xet is now "3" or "1"
         board[xet[4]]=5   #Middle cell in this xet is now "3" or "1"
         #print_board()
+        precount=boardpopcount()
+        pretime = time.process_time()
         ruleof2xet(xet)                 #Remove "3" and "1" from 7 cells in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
         # test that "3" & "1" have been removed from the xet, but nowhere else
         #print_board()
         assert board[xet[ 0]]==  5  #Check this is still 5, but fix it.
@@ -313,7 +369,12 @@ def testruleof3xet():  # Test the "Rule of 3" for a set. If 3 cells contain the 
         board[xet[0]] =  13  # Top left cell in this xet is now "9", "4", "3" | "1" (8+4+1)
         board[xet[2]] =  13  # Top right cell in this xet is now "9", "4", "3" | "1"
         board[xet[3]] =  13  # Centre left centre cell in this xet is now "9", "4", "3" | "1"
+        precount=boardpopcount()
+        pretime = time.process_time()
         ruleof3xet(xet)  # Remove "4", "3" and "1" from 7 cells in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
         # test that "4", "3" & "1" have been removed from the xet, but nowhere else
         #print_board()
         assert board[xet[0]] == 13  # Check this is still 13, but fix it.
@@ -337,7 +398,12 @@ def testruleof4xet():  # Test the "Rule of 4" for a set. If 4 cells contain the 
         board[xet[2]] = 269  # Top right cell in this xet is now "9", "4", "3" or "1"
         board[xet[3]] = 269  # Centre left centre cell in this xet is now "9", "4", "3" or "1"
         board[xet[5]] = 269  # Centre right centre cell in this xet is now "9", "4", "3" or "1"
+        precount=boardpopcount()
+        pretime = time.process_time()
         ruleof4xet(xet)  # Remove "9", "4", "3" and "1" from 7 cells in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
         # test that "9", "4", "3" & "1" have been removed from the xet, but nowhere else
         #print_board()
         assert board[xet[0]] == 269  # Check this is still 269, but fix it.
@@ -364,7 +430,12 @@ def testruleof5xet():  # Test the "Rule of 5" for a set. If 5 cells contain the 
         board[xet[3]] = 397  # Centre left centre cell in this xet is now "9", "8", "4", "3" or "1"
         board[xet[5]] = 397  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
         board[xet[6]] = 397  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        precount=boardpopcount()
+        pretime = time.process_time()
         ruleof5xet(xet)  # Remove "9", "4", "3" and "1" from 7 cells in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
         # test that "9", "4", "3" & "1" have been removed from the xet, but nowhere else
         #print_board()
         assert board[xet[0]] == 397  # Check this is still 397, but fix it.
@@ -384,8 +455,44 @@ def testruleof5xet():  # Test the "Rule of 5" for a set. If 5 cells contain the 
         for n in range(0, 81):                # Check every cell in the board
             assert board[n] == 511
 
-#    def testruleof5xet()
-#    def testruleof6xet()
+def testruleof6xet():  # Test the "Rule of 6" for a set. If 5 cells contain the same 6 digits, eliminate that from the rest of the cells
+    # Try each xet in the puzzle.
+    for xet in xets:
+        resetboard(511)  # set every cell to every possible value
+        board[xet[0]] = 399  # Top left cell in this xet is now "9", "8", "4", "3" "2" or "1" (256+128+8+4+2+1)
+        board[xet[2]] = 399  # Top right cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[3]] = 399  # Centre left centre cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[5]] = 399  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[6]] = 399  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        board[xet[7]] = 399  # Centre right centre cell in this xet is now "9", "8", "4", "3" or "1"
+        precount=boardpopcount()
+        pretime = time.process_time()
+        ruleof6xet(xet)  # Remove "9", "4", "3" and "1" from 7 cells in that xet
+        postcount=boardpopcount()
+        posttime = time.process_time()
+        print("RuleOf1Xet killed ",precount-postcount," in ",1000*(posttime-pretime),"mS, ie ",0.001*(precount-postcount)/(posttime-pretime)," per mS")
+        # test that "9", "4", "3" & "1" have been removed from the xet, but nowhere else
+        #print_board()
+        assert board[xet[0]] == 399  # Check this is still 399, but fix it.
+        board[xet[0]] = 511-399
+        assert board[xet[2]] == 399  # Check this is still 399, but fix it.
+        board[xet[2]] = 511-399
+        assert board[xet[3]] == 399  # Check this is still 399, but fix it.
+        board[xet[3]] = 511-399
+        assert board[xet[5]] == 399  # Check this is still 399, but fix it.
+        board[xet[5]] = 511-399
+        assert board[xet[6]] == 399  # Check this is still 399, but fix it.
+        board[xet[6]] = 511-399
+        assert board[xet[7]] == 399  # Check this is still 399, but fix it.
+        board[xet[7]] = 511-399
+        for n in range(0, len(xet)):
+            assert board[xet[n]] == 511 - 399  # Check every cell in the set is okay
+            board[xet[n]] = 511
+        #print_board()
+        for n in range(0, 81):                # Check every cell in the board
+            assert board[n] == 511
+
+
 #    def testruleof7xet()
 #    def testruleof8xet()
 #    def testonlyplacexet()
@@ -421,33 +528,15 @@ def testruleof5xet():  # Test the "Rule of 5" for a set. If 5 cells contain the 
 
 #Execute the tests:
 start_time = time.process_time()
-testruleof1xet()
-testruleof2xet()
-testruleof3xet()
-testruleof4xet()
-testruleof5xet()
+#testruleof1xet()
+#testruleof2xet()
+#testruleof3xet()
+#testruleof4xet()
+#testruleof5xet()
 #testruleof6xet()
 #testruleof7xet()
 #testruleof8xet()
 #testonlyplacexet()
-#testruleof1col()
-#testruleof2col()
-#testruleof3col()
-#testruleof4col()
-#testruleof5col()
-#testruleof6col()
-#testruleof7col()
-#testruleof8col()
-#testonlyplacecol()
-#testruleof1row()
-#testruleof2row()
-#testruleof3row()
-#testruleof4row()
-#testruleof5row()
-#testruleof6row()
-#testruleof7row()
-#testruleof8row()
-#testonlyplacerow()
 #testruleof1cage()
 #testruleof2cage()
 #testruleof3cage()
@@ -457,4 +546,5 @@ testruleof5xet()
 #testruleof7cage()
 #testruleof8cage()
 #testonlyplacecage()
+#Ruleof45- calculate values, split cages. If split cages, recalculate the possible values using AND to not rework anything.
 print("Elapsed=",time.process_time()-start_time)
